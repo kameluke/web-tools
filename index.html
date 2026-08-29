@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Web Tools</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    color-scheme: light dark;
+  }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    max-width: 720px;
+    margin: 3rem auto;
+    padding: 0 1.5rem;
+    line-height: 1.6;
+  }
+  h1 { margin-bottom: 0.25rem; }
+  p.lead { color: #666; margin-top: 0; }
+  ul.tools { list-style: none; padding: 0; }
+  ul.tools li {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .tool-name { font-size: 1.1rem; font-weight: 600; margin: 0 0 0.25rem; }
+  .tool-desc { margin: 0 0 0.75rem; color: #555; }
+  .tool-links a {
+    display: inline-block;
+    margin-right: 1rem;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .tool-links a.launch { color: #0969da; }
+  .tool-links a.source { color: #57606a; }
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #ddd;
+    color: #555;
+    font-size: 0.95rem;
+  }
+  footer p { margin: 0 0 1rem; }
+  footer .contact { margin-top: 1rem; }
+  @media (prefers-color-scheme: dark) {
+    p.lead, .tool-desc { color: #aaa; }
+    ul.tools li { border-color: #444; }
+    .tool-links a.launch { color: #6cb6ff; }
+    .tool-links a.source { color: #9aa4b2; }
+    footer { border-color: #444; color: #aaa; }
+  }
+</style>
+</head>
+<body>
+  <h1>Web Tools</h1>
+  <p class="lead">個人で作った静的Webツール一覧です。 / A collection of static web tools I made.</p>
+
+  <!--
+    新しいツールを追加する手順 / How to add a new tool:
+    1. tools/<tool-name>/ にHTML/CSS/JSを配置する / Place HTML/CSS/JS under tools/<tool-name>/
+    2. 下の <ul class="tools"> に <li> を1つ追加する / Add one <li> to <ul class="tools"> below
+       - launch: 実行ページ (GitHub Pages上のURL) / launch page (GitHub Pages URL)
+       - source: GitHubのソースコード (tree/main/tools/<tool-name>) / source link
+  -->
+  <ul class="tools">
+    <li>
+      <p class="tool-name">Protein Quantification Calculator</p>
+      <p class="tool-desc">STD濃度・Abs値から標準曲線を作成し、サンプル濃度と調製量を計算するツールです。<br>Generates a standard curve from STD concentrations and Abs values, and calculates sample concentration and preparation volume.</p>
+      <div class="tool-links">
+        <a class="launch" href="tools/protein-quantification-calculator/">▶ 起動 / Launch</a>
+        <a class="source" href="https://github.com/kameluke/web-tools/tree/main/tools/protein-quantification-calculator" target="_blank" rel="noopener">ソースを見る / View source</a>
+      </div>
+    </li>
+    <li>
+      <p class="tool-name">AAV Titer Calculator</p>
+      <p class="tool-desc">qPCR/ddPCRのCt値からAAVベクターの検量線・コピー数・titerを計算するツールです。<br>Calculates AAV vector standard curve, copy number, and titer from qPCR/ddPCR Ct values.</p>
+      <div class="tool-links">
+        <a class="launch" href="tools/aav-titer-calculator/">▶ 起動 / Launch</a>
+        <a class="source" href="https://github.com/kameluke/web-tools/tree/main/tools/aav-titer-calculator" target="_blank" rel="noopener">ソースを見る / View source</a>
+      </div>
+    </li>
+  </ul>
+
+  <footer>
+    <p>
+      このアプリが便利だなと思った方は下記より応援頂けましたら幸いです。<br>
+      If you found this app useful, I’d appreciate your support via the link below.
+    </p>
+    <a href="https://ko-fi.com/R5R01LNAG4" target="_blank" rel="noopener">
+      <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Ko-fiで活動を応援する / Support me on Ko-fi">
+    </a>
+    <p class="contact">
+      連絡先 Contact:<br>
+      <a href="mailto:kamel@med.kobe-u.ac.jp">kamel@med.kobe-u.ac.jp</a>
+    </p>
+  </footer>
+</body>
+</html>
