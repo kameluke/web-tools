@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Reagent Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    max-width: 760px;
+    margin: 2rem auto 4rem;
+    padding: 0 1.5rem;
+    line-height: 1.6;
+  }
+  a.back { font-size: 0.9rem; text-decoration: none; color: #0969da; }
+  h1 { margin-bottom: 0.25rem; }
+  p.lead { color: #666; margin-top: 0; }
+  section {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    margin: 1.5rem 0;
+  }
+  section h2 { margin-top: 0; font-size: 1.15rem; }
+  section p.note { color: #666; font-size: 0.9rem; margin-top: -0.5rem; }
+  table { border-collapse: collapse; width: 100%; margin: 0.75rem 0; }
+  th, td { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 1px solid #eee; }
+  th { font-size: 0.85rem; color: #666; font-weight: 600; }
+  input[type="number"], input[type="text"] {
+    width: 7rem;
+    padding: 0.3rem 0.4rem;
+    box-sizing: border-box;
+  }
+  input[type="text"].name { width: 100%; }
+  select { padding: 0.3rem; }
+  .row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin: 0.5rem 0; }
+  .row label { min-width: 11rem; font-size: 0.95rem; }
+  .result {
+    background: color-mix(in oklab, #0969da 8%, transparent);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin-top: 0.75rem;
+  }
+  .result strong { font-size: 1.05rem; }
+  @media (prefers-color-scheme: dark) {
+    p.lead, section p.note, th { color: #aaa; }
+    section { border-color: #444; }
+    th, td { border-color: #333; }
+    a.back { color: #6cb6ff; }
+    .result { background: color-mix(in oklab, #6cb6ff 12%, transparent); }
+  }
+</style>
+</head>
+<body>
+  <a class="back" href="../../">← Web Tools</a>
+  <h1>Reagent Calculator</h1>
+  <p class="lead">試薬調製・希釈・DNAモル濃度・マスターミックス計算 / Reagent preparation, dilution, DNA molarity, and master mix calculators</p>
+
+  <section>
+    <h2>⚗️ Molar Solution 溶液調製</h2>
+    <div class="row">
+      <label for="mol-mw">Molecular weight 分子量 (g/mol)</label>
+      <input type="number" id="mol-mw" value="121.14" step="any">
+    </div>
+    <div class="row">
+      <label for="mol-conc">Target concentration 目標濃度</label>
+      <input type="number" id="mol-conc" value="1" step="any">
+      <select id="mol-conc-unit">
+        <option value="1">M</option>
+        <option value="0.001">mM</option>
+        <option value="0.000001">µM</option>
+        <option value="0.000000001">nM</option>
+      </select>
+    </div>
+    <div class="row">
+      <label for="mol-vol">Final volume 最終容量</label>
+      <input type="number" id="mol-vol" value="500" step="any">
+      <select id="mol-vol-unit">
+        <option value="1">L</option>
+        <option value="0.001" selected>mL</option>
+        <option value="0.000001">µL</option>
+      </select>
+    </div>
+    <div class="result">
+      Required mass 必要量: <strong id="mol-out-g">–</strong> g
+      = <strong id="mol-out-mg">–</strong> mg
+    </div>
+  </section>
+
+  <section>
+    <h2>💧 Dilution 希釈</h2>
+    <div class="row">
+      <label for="dil-stock-conc">Stock concentration 原液濃度</label>
+      <input type="number" id="dil-stock-conc" value="1" step="any">
+      <select id="dil-stock-unit">
+        <option value="1">M</option>
+        <option value="0.001">mM</option>
+        <option value="0.000001">µM</option>
+        <option value="0.000000001">nM</option>
+      </select>
+    </div>
+    <div class="row">
+      <label for="dil-final-conc">Final concentration 最終濃度</label>
+      <input type="number" id="dil-final-conc" value="50" step="any">
+      <select id="dil-final-unit">
+        <option value="1">M</option>
+        <option value="0.001" selected>mM</option>
+        <option value="0.000001">µM</option>
+        <option value="0.000000001">nM</option>
+      </select>
+    </div>
+    <div class="row">
+      <label for="dil-final-vol">Final volume 最終容量</label>
+      <input type="number" id="dil-final-vol" value="20" step="any">
+      <select id="dil-vol-unit">
+        <option value="1">L</option>
+        <option value="1" selected>mL</option>
+        <option value="1">µL</option>
+      </select>
+    </div>
+    <div class="result">
+      Stock solution 原液使用量: <strong id="dil-out-stock">–</strong><br>
+      Diluent 希釈液: <strong id="dil-out-diluent">–</strong>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧬 DNA Molarity DNAモル濃度</h2>
+    <p class="note">dsDNA = 660 g/mol/bp として近似 / approximated as 660 g/mol/bp for dsDNA</p>
+    <div class="row">
+      <label for="dna-bp">DNA length 塩基長 (bp)</label>
+      <input type="number" id="dna-bp" value="5732" step="any">
+    </div>
+    <div class="row">
+      <label for="dna-conc">Concentration 濃度 (ng/µL)</label>
+      <input type="number" id="dna-conc" value="100" step="any">
+    </div>
+    <div class="row">
+      <label for="dna-mass">Mass 量 (ng)</label>
+      <input type="number" id="dna-mass" value="500" step="any">
+    </div>
+    <div class="row">
+      <label for="dna-pmol">Target amount 目標量 (pmol)</label>
+      <input type="number" id="dna-pmol" value="1" step="any">
+    </div>
+    <div class="result">
+      Concentration 濃度: <strong id="dna-out-conc">–</strong> nM<br>
+      Amount 量: <strong id="dna-out-amount">–</strong> pmol<br>
+      Mass for target amount 目標量に必要な質量: <strong id="dna-out-mass">–</strong> ng
+    </div>
+  </section>
+
+  <section>
+    <h2>🧫 Master Mix マスターミックス</h2>
+    <div class="row">
+      <label for="mm-samples">Number of reactions 反応数</label>
+      <input type="number" id="mm-samples" value="8" step="any">
+    </div>
+    <div class="row">
+      <label for="mm-extra">Extra volume 余分 (%)</label>
+      <input type="number" id="mm-extra" value="10" step="any">
+    </div>
+    <table>
+      <thead>
+        <tr><th>Reagent 試薬</th><th>Per reaction 1反応あたり (µL)</th><th>Total 合計 (µL)</th></tr>
+      </thead>
+      <tbody id="mm-rows"></tbody>
+      <tfoot>
+        <tr>
+          <th>TOTAL</th>
+          <th id="mm-total-per">–</th>
+          <th id="mm-total-all">–</th>
+        </tr>
+      </tfoot>
+    </table>
+  </section>
+
+<script>
+(function () {
+  function num(el) { return parseFloat(el.value) || 0; }
+  function round(v, d) {
+    const f = Math.pow(10, d);
+    return Math.round((v + Number.EPSILON) * f) / f;
+  }
+
+  // Molar Solution
+  const molMw = document.getElementById('mol-mw');
+  const molConc = document.getElementById('mol-conc');
+  const molConcUnit = document.getElementById('mol-conc-unit');
+  const molVol = document.getElementById('mol-vol');
+  const molVolUnit = document.getElementById('mol-vol-unit');
+  const molOutG = document.getElementById('mol-out-g');
+  const molOutMg = document.getElementById('mol-out-mg');
+
+  function updateMolar() {
+    const mw = num(molMw);
+    const conc = num(molConc) * num(molConcUnit);
+    const vol = num(molVol) * num(molVolUnit);
+    const g = mw * conc * vol;
+    molOutG.textContent = round(g, 6);
+    molOutMg.textContent = round(g * 1000, 3);
+  }
+  [molMw, molConc, molConcUnit, molVol, molVolUnit].forEach(el => el.addEventListener('input', updateMolar));
+
+  // Dilution
+  const dilStockConc = document.getElementById('dil-stock-conc');
+  const dilStockUnit = document.getElementById('dil-stock-unit');
+  const dilFinalConc = document.getElementById('dil-final-conc');
+  const dilFinalUnit = document.getElementById('dil-final-unit');
+  const dilFinalVol = document.getElementById('dil-final-vol');
+  const dilVolUnit = document.getElementById('dil-vol-unit');
+  const dilOutStock = document.getElementById('dil-out-stock');
+  const dilOutDiluent = document.getElementById('dil-out-diluent');
+
+  function volUnitLabel() {
+    return dilVolUnit.options[dilVolUnit.selectedIndex].textContent;
+  }
+
+  function updateDilution() {
+    const stock = num(dilStockConc) * num(dilStockUnit);
+    const final = num(dilFinalConc) * num(dilFinalUnit);
+    const finalVol = num(dilFinalVol);
+    const stockVol = stock > 0 ? (final / stock) * finalVol : 0;
+    const diluent = finalVol - stockVol;
+    const unit = volUnitLabel();
+    dilOutStock.textContent = round(stockVol, 4) + ' ' + unit;
+    dilOutDiluent.textContent = round(diluent, 4) + ' ' + unit;
+  }
+  [dilStockConc, dilStockUnit, dilFinalConc, dilFinalUnit, dilFinalVol, dilVolUnit].forEach(el => el.addEventListener('input', updateDilution));
+
+  // DNA Molarity
+  const dnaBp = document.getElementById('dna-bp');
+  const dnaConc = document.getElementById('dna-conc');
+  const dnaMass = document.getElementById('dna-mass');
+  const dnaPmol = document.getElementById('dna-pmol');
+  const dnaOutConc = document.getElementById('dna-out-conc');
+  const dnaOutAmount = document.getElementById('dna-out-amount');
+  const dnaOutMass = document.getElementById('dna-out-mass');
+
+  function updateDna() {
+    const bp = num(dnaBp);
+    const concNgUl = num(dnaConc);
+    const massNg = num(dnaMass);
+    const targetPmol = num(dnaPmol);
+    const denom = 660 * bp;
+    dnaOutConc.textContent = denom > 0 ? round(concNgUl * 1000000 / denom, 3) : '–';
+    dnaOutAmount.textContent = denom > 0 ? round(massNg * 1000 / denom, 4) : '–';
+    dnaOutMass.textContent = round(targetPmol * 660 * bp / 1000, 3);
+  }
+  [dnaBp, dnaConc, dnaMass, dnaPmol].forEach(el => el.addEventListener('input', updateDna));
+
+  // Master Mix
+  const mmSamples = document.getElementById('mm-samples');
+  const mmExtra = document.getElementById('mm-extra');
+  const mmRows = document.getElementById('mm-rows');
+  const mmTotalPer = document.getElementById('mm-total-per');
+  const mmTotalAll = document.getElementById('mm-total-all');
+
+  const defaultReagents = [
+    { name: 'Buffer', vol: 5 },
+    { name: 'Enzyme', vol: 0.5 },
+    { name: 'Primer', vol: 1 },
+    { name: 'DNA', vol: 1 },
+    { name: 'Water', vol: 12.5 },
+  ];
+
+  defaultReagents.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td><input type="text" class="name" data-role="name" value="' + r.name + '"></td>' +
+      '<td><input type="number" data-role="vol" value="' + r.vol + '" step="any"></td>' +
+      '<td data-role="total">–</td>';
+    mmRows.appendChild(tr);
+  });
+
+  function updateMasterMix() {
+    const samples = num(mmSamples);
+    const extra = num(mmExtra);
+    const factor = samples * (1 + extra / 100);
+    let sumPer = 0;
+    mmRows.querySelectorAll('tr').forEach(tr => {
+      const volInput = tr.querySelector('[data-role="vol"]');
+      const vol = parseFloat(volInput.value) || 0;
+      sumPer += vol;
+      tr.querySelector('[data-role="total"]').textContent = round(vol * factor, 2);
+    });
+    mmTotalPer.textContent = round(sumPer, 2);
+    mmTotalAll.textContent = round(sumPer * factor, 2);
+  }
+
+  mmRows.addEventListener('input', updateMasterMix);
+  [mmSamples, mmExtra].forEach(el => el.addEventListener('input', updateMasterMix));
+
+  updateMolar();
+  updateDilution();
+  updateDna();
+  updateMasterMix();
+})();
+</script>
+</body>
+</html>
