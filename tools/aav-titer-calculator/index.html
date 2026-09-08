@@ -1074,6 +1074,13 @@ html>body{padding:0}</style>
       min-height: 250px;
       overflow: visible;
     }
+    #qpcr-calculator .chart-panel {
+      display: flex;
+      flex-direction: column;
+    }
+    #qpcr-calculator .chart-panel svg {
+      flex: 1 1 auto;
+    }
     #qpcr-calculator .axis text,
     #qpcr-calculator .axis-title,
     #qpcr-calculator .point-label {
@@ -1105,6 +1112,9 @@ html>body{padding:0}</style>
       fill: transparent;
       stroke: var(--muted);
       stroke-width: 1.7;
+    }
+    #qpcr-calculator .unk-point {
+      fill: #e02e2a;
     }
     #qpcr-calculator .unknown {
       color: var(--muted);
@@ -1171,8 +1181,47 @@ html>body{padding:0}</style>
     #qpcr-calculator .credit {
       color: var(--muted);
       font-size: 11px;
-      text-align: right;
+      text-align: left;
       padding: 0 2px 2px;
+    }
+    #qpcr-calculator .changelog {
+      margin-top: 2px;
+    }
+    #qpcr-calculator .changelog summary {
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 11px;
+      list-style: none;
+      padding: 0 2px;
+    }
+    #qpcr-calculator .changelog summary::-webkit-details-marker {
+      display: none;
+    }
+    #qpcr-calculator .changelog summary::before {
+      content: "▸ ";
+    }
+    #qpcr-calculator .changelog[open] summary::before {
+      content: "▾ ";
+    }
+    #qpcr-calculator .changelog ul {
+      margin: 4px 0 0;
+      padding-left: 2px;
+      color: var(--muted);
+      font-size: 11px;
+      list-style: none;
+    }
+    #qpcr-calculator .changelog li {
+      display: flex;
+      gap: 8px;
+      margin-top: 2px;
+    }
+    #qpcr-calculator .changelog .ver {
+      flex: 0 0 34px;
+      font-variant-numeric: tabular-nums;
+    }
+    #qpcr-calculator .changelog .date {
+      flex: 0 0 82px;
+      font-variant-numeric: tabular-nums;
     }
     @media print {
       @page {
@@ -1278,7 +1327,7 @@ html>body{padding:0}</style>
       </div>
       <div class="compact" id="ntc-note"></div>
     </div>
-    <div class="panel">
+    <div class="panel chart-panel">
       <div class="metrics">
         <div class="metric"><span>傾き</span><strong id="slope">-</strong></div>
         <div class="metric"><span>切片</span><strong id="intercept">-</strong></div>
@@ -1330,7 +1379,14 @@ html>body{padding:0}</style>
   <div class="actions footer-actions">
     <button type="button" id="print-page">Print</button>
   </div>
-  <div class="credit">Created with Codex | 2026/8/21 kamel</div>
+  <div class="credit">Created with Codex &amp; Claude | kamel</div>
+  <details class="changelog">
+    <summary>更新履歴</summary>
+    <ul>
+      <li><span class="ver">v1.1</span><span class="date">2026/09/09</span><span>機能改善・印刷対応</span></li>
+      <li><span class="ver">v1.0</span><span class="date">2026/08/21</span><span>初版</span></li>
+    </ul>
+  </details>
   <script>
     (() => {
       const root = document.getElementById("qpcr-calculator");
@@ -1351,13 +1407,13 @@ html>body{padding:0}</style>
         { use: true, copy: 1e3, log: 3, ct: 28.0046569667665 }
       ];
       let unknowns = [
-        { include: true, well: "B01", name: "postD 10e-1", ct: 12.82, dilution: 100 },
-        { include: true, well: "B02", name: "postD 10e-2", ct: 16.43, dilution: 1000 },
-        { include: true, well: "B03", name: "postD 10e-3", ct: 20.30, dilution: 10000 },
-        { include: true, well: "B04", name: "postD 10e-4", ct: 24.11, dilution: 100000 },
-        { include: true, well: "B05", name: "postD 10e-5", ct: 27.28, dilution: 1000000 },
-        { include: false, well: "B06", name: "postD 10e-6", ct: 28.04, dilution: 10000000 },
-        { include: false, well: "B07", name: "postD 10e-7", ct: 27.40, dilution: 100000000 }
+        { include: true, well: "B01", name: "AAV 10e-1", ct: 12.82, dilution: 100 },
+        { include: true, well: "B02", name: "AAV 10e-2", ct: 16.43, dilution: 1000 },
+        { include: true, well: "B03", name: "AAV 10e-3", ct: 20.30, dilution: 10000 },
+        { include: true, well: "B04", name: "AAV 10e-4", ct: 24.11, dilution: 100000 },
+        { include: true, well: "B05", name: "AAV 10e-5", ct: 27.28, dilution: 1000000 },
+        { include: false, well: "B06", name: "AAV 10e-6", ct: 28.04, dilution: 10000000 },
+        { include: false, well: "B07", name: "AAV 10e-7", ct: 27.40, dilution: 100000000 }
       ];
       const groupSettings = new Map();
       const regression = rows => {
@@ -1697,7 +1753,7 @@ html>body{padding:0}</style>
       const drawChart = (fit) => {
         chart.replaceChildren();
         const width = chart.clientWidth || 620;
-        const height = 250;
+        const height = chart.clientHeight || 250;
         chart.setAttribute("viewBox", `0 0 ${width} ${height}`);
         const m = { top: 18, right: 22, bottom: 46, left: 56 };
         const innerW = width - m.left - m.right;
@@ -1747,6 +1803,22 @@ html>body{padding:0}</style>
         std.forEach((d) => {
           make("circle", { cx: x(d.log), cy: y(d.ct), r: 5, class: d.use ? "std-point" : "excluded" });
         });
+        if (fit) {
+          const size = 8;
+          unknowns.forEach((row) => {
+            if (row.include === false) return;
+            if (!Number.isFinite(row.ct)) return;
+            const logCopy = (row.ct - fit.intercept) / fit.slope;
+            if (!Number.isFinite(logCopy)) return;
+            make("rect", {
+              x: x(logCopy) - size / 2,
+              y: y(row.ct) - size / 2,
+              width: size,
+              height: size,
+              class: "unk-point"
+            });
+          });
+        }
       };
       const update = () => {
         const fit = regression(std);
@@ -1826,9 +1898,9 @@ html>body{padding:0}</style>
           "A07\tSYBR\t\tStd\t\t28.58\t10000.00000",
           "A08\tSYBR\t\tStd\t\t28.00\t1000.00000",
           "A09\tSYBR\t\tNTC\t\t27.65\t",
-          "B01\tSYBR\t\tUnkn\tpostD 10e-1\t12.82\t",
-          "B02\tSYBR\t\tUnkn\tpostD 10e-2\t16.43\t",
-          "B03\tSYBR\t\tUnkn\tpostD 10e-3\t20.30\t"
+          "B01\tSYBR\t\tUnkn\tAAV 10e-1\t12.82\t",
+          "B02\tSYBR\t\tUnkn\tAAV 10e-2\t16.43\t",
+          "B03\tSYBR\t\tUnkn\tAAV 10e-3\t20.30\t"
         ].join("\n");
         applyPaste();
       });
