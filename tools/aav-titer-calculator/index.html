@@ -1225,7 +1225,6 @@ html>body{padding:0}</style>
     }
     @media print {
       @page {
-        size: landscape;
         margin: 10mm;
       }
       #qpcr-calculator,
@@ -1260,10 +1259,36 @@ html>body{padding:0}</style>
       }
       #qpcr-calculator .avg-table {
         table-layout: fixed;
+        width: 100%;
+      }
+      #qpcr-calculator .avg-table th:first-child,
+      #qpcr-calculator .avg-table td:first-child {
+        width: 23%;
+        min-width: 0;
+      }
+      #qpcr-calculator .avg-table th:nth-child(2),
+      #qpcr-calculator .avg-table td:nth-child(2) {
+        width: 18%;
+      }
+      #qpcr-calculator .avg-table th:nth-child(3),
+      #qpcr-calculator .avg-table td:nth-child(3) {
+        width: 11%;
+      }
+      #qpcr-calculator .avg-table th:nth-child(4),
+      #qpcr-calculator .avg-table th:nth-child(5),
+      #qpcr-calculator .avg-table th:nth-child(6),
+      #qpcr-calculator .avg-table th:nth-child(7),
+      #qpcr-calculator .avg-table td:nth-child(4),
+      #qpcr-calculator .avg-table td:nth-child(5),
+      #qpcr-calculator .avg-table td:nth-child(6),
+      #qpcr-calculator .avg-table td:nth-child(7) {
+        width: 12%;
       }
       #qpcr-calculator input,
       #qpcr-calculator select {
         min-width: 0;
+        width: 100%;
+        box-sizing: border-box;
       }
       #qpcr-calculator th {
         background: var(--head) !important;
