@@ -1522,16 +1522,27 @@ html>body{padding:0}</style>
         const parsedUnknowns = [];
         let parsedNtc = NaN;
         const rows = text.split(/\r?\n/).map(row => row.split("\t").map(cell => cell.trim()));
-        const headerRow = rows.find(cells => cells.some(cell => /^well$/i.test(cell)) && cells.some(cell => /^content$/i.test(cell)));
-        const headers = headerRow ? headerRow.map(cell => cell.toLowerCase()) : [];
-        const col = name => headers.findIndex(header => header === name);
-        const idx = {
-          content: col("content"),
-          well: col("well"),
-          sample: col("sample"),
-          cq: col("cq"),
-          sq: col("sq")
+        const findCol = (headerCells, aliases) => {
+          for (const alias of aliases) {
+            const i = headerCells.indexOf(alias);
+            if (i >= 0) return i;
+          }
+          return -1;
         };
+        const headerRow = rows.find(cells =>
+          cells.some(cell => /^well$/i.test(cell)) &&
+          cells.some(cell => /^(content|task)$/i.test(cell))
+        );
+        const headers = headerRow ? headerRow.map(cell => cell.trim().toLowerCase()) : [];
+        const idx = {
+          content: findCol(headers, ["content", "task"]),
+          well: findCol(headers, ["well"]),
+          sample: findCol(headers, ["sample", "sample name"]),
+          cq: findCol(headers, ["cq", "ct", "cт"]),
+          sq: findCol(headers, ["sq", "quantity", "starting quantity"])
+        };
+        let stdAutoLog = 10;
+        let usedPlaceholderLog = false;
         rows.forEach(cells => {
           if (!cells.some(Boolean)) return;
           if (cells === headerRow) return;
@@ -1539,8 +1550,14 @@ html>body{padding:0}</style>
             const content = (cells[idx.content] || "").toLowerCase();
             const cq = parseNumber(cells[idx.cq]);
             const sq = idx.sq >= 0 ? parseNumber(cells[idx.sq]) : NaN;
-            if (content === "std" && Number.isFinite(cq) && Number.isFinite(sq) && sq > 0) {
-              parsedStd.push({ use: true, copy: sq, log: Math.log10(sq), ct: cq });
+            if ((content === "std" || content === "standard") && Number.isFinite(cq)) {
+              if (Number.isFinite(sq) && sq > 0) {
+                parsedStd.push({ use: true, copy: sq, log: Math.log10(sq), ct: cq });
+              } else {
+                const log = stdAutoLog--;
+                usedPlaceholderLog = true;
+                parsedStd.push({ use: true, copy: 10 ** log, log, ct: cq });
+              }
               return;
             }
             if (content === "ntc") {
@@ -1600,11 +1617,11 @@ html>body{padding:0}</style>
             parsedStd.push({ use: true, copy: 10 ** finite[0], log: finite[0], ct: finite[1] });
           }
         });
-        return { parsedStd, parsedUnknowns, parsedNtc };
+        return { parsedStd, parsedUnknowns, parsedNtc, usedPlaceholderLog };
       };
       const applyPaste = () => {
         const text = root.querySelector("#paste-box").value;
-        const { parsedStd, parsedUnknowns, parsedNtc } = parsePastedRows(text);
+        const { parsedStd, parsedUnknowns, parsedNtc, usedPlaceholderLog } = parsePastedRows(text);
         if (!parsedStd.length && !parsedUnknowns.length && !Number.isFinite(parsedNtc)) {
           root.querySelector("#paste-status").textContent = "認識できるStd/Unkn/NTC行がありません";
           return;
@@ -1615,7 +1632,8 @@ html>body{padding:0}</style>
         if (Number.isFinite(parsedNtc)) ntcCt = parsedNtc;
         renderStd();
         update();
-        root.querySelector("#paste-status").textContent = `Std ${parsedStd.length || std.length}点、未知 ${parsedUnknowns.length || unknowns.length}行、NTC ${Number.isFinite(ntcCt) ? fmt(ntcCt, 5) : "-"} を反映`;
+        const note = usedPlaceholderLog ? "(STDにcopy数の列が無かったため、copy/logは仮の値です。標準系列の表で実際の値に修正してください)" : "";
+        root.querySelector("#paste-status").textContent = `Std ${parsedStd.length || std.length}点、未知 ${parsedUnknowns.length || unknowns.length}行、NTC ${Number.isFinite(ntcCt) ? fmt(ntcCt, 5) : "-"} を反映 ${note}`;
       };
       const numberInput = (value, onChange, step = "any") => {
         const input = document.createElement("input");
@@ -1667,7 +1685,36 @@ html>body{padding:0}</style>
           stdBody.append(tr);
         });
       };
+      const captureFocus = (container) => {
+        const active = document.activeElement;
+        if (!active || !container.contains(active)) return null;
+        const tr = active.closest("tr");
+        if (!tr || !tr.parentElement) return null;
+        const td = active.closest("td");
+        return {
+          rowIndex: Array.prototype.indexOf.call(tr.parentElement.children, tr),
+          cellIndex: td ? Array.prototype.indexOf.call(tr.children, td) : -1,
+          selectionStart: typeof active.selectionStart === "number" ? active.selectionStart : null,
+          selectionEnd: typeof active.selectionEnd === "number" ? active.selectionEnd : null
+        };
+      };
+      const restoreFocus = (container, saved) => {
+        if (!saved) return;
+        const tr = container.children[saved.rowIndex];
+        const td = tr && saved.cellIndex >= 0 ? tr.children[saved.cellIndex] : null;
+        const field = td ? td.querySelector("input, select") : null;
+        if (!field) return;
+        field.focus();
+        if (saved.selectionStart != null && typeof field.setSelectionRange === "function") {
+          try {
+            field.setSelectionRange(saved.selectionStart, saved.selectionEnd);
+          } catch (err) {
+            /* not a text-selectable input (e.g. number) */
+          }
+        }
+      };
       const renderUnknowns = (fit) => {
+        const savedFocus = captureFocus(unkBody);
         unkBody.replaceChildren();
         avgBody.replaceChildren();
         applyFixedDilutions(unknowns);
@@ -1774,6 +1821,7 @@ html>body{padding:0}</style>
           tr.append(nameTd, commentTd, lotTd, meanTd, volumeTd, dishTd, gcDishTd);
           avgBody.append(tr);
         });
+        restoreFocus(unkBody, savedFocus);
       };
       const drawChart = (fit) => {
         chart.replaceChildren();
