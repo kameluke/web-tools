@@ -929,6 +929,19 @@ html>body{padding:0}</style>
       gap: 16px;
       align-items: stretch;
     }
+    #qpcr-calculator .paste-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: stretch;
+    }
+    #qpcr-calculator .paste-row .panel {
+      display: flex;
+      flex-direction: column;
+    }
+    #qpcr-calculator .paste-row textarea {
+      flex: 1 1 auto;
+    }
     #qpcr-calculator .panel {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -1234,8 +1247,10 @@ html>body{padding:0}</style>
       }
       #qpcr-calculator .actions,
       #qpcr-calculator .footer-actions,
-      #qpcr-calculator #paste-box,
-      #qpcr-calculator #paste-status,
+      #qpcr-calculator #std-paste-box,
+      #qpcr-calculator #std-paste-status,
+      #qpcr-calculator #sample-paste-box,
+      #qpcr-calculator #sample-paste-status,
       #qpcr-calculator .no-print,
       #back-link {
         display: none;
@@ -1303,6 +1318,9 @@ html>body{padding:0}</style>
       #qpcr-calculator .top {
         grid-template-columns: 1fr;
       }
+      #qpcr-calculator .paste-row {
+        grid-template-columns: 1fr;
+      }
       #qpcr-calculator .metrics {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -1322,15 +1340,27 @@ html>body{padding:0}</style>
     }
   </style>
   <h1 class="app-title">AAV titer Calculator</h1>
-  <div class="panel">
-    <h3>Excel貼り付け</h3>
-    <textarea id="paste-box" aria-label="paste Excel rows"></textarea>
-    <div class="actions">
-      <button type="button" id="apply-paste">貼り付けを反映</button>
-      <button type="button" id="load-example">入力例</button>
-      <button type="button" id="clear-paste">クリア</button>
+  <div class="paste-row no-print">
+    <div class="panel" id="std-paste-panel">
+      <h3>STD貼り付け</h3>
+      <textarea id="std-paste-box" aria-label="paste STD rows"></textarea>
+      <div class="actions">
+        <button type="button" id="std-apply-paste">貼り付けを反映</button>
+        <button type="button" id="std-load-example">入力例</button>
+        <button type="button" id="std-clear-paste">クリア</button>
+      </div>
+      <div class="status" id="std-paste-status"></div>
     </div>
-    <div class="status" id="paste-status"></div>
+    <div class="panel" id="sample-paste-panel">
+      <h3>サンプル貼り付け</h3>
+      <textarea id="sample-paste-box" aria-label="paste sample rows"></textarea>
+      <div class="actions">
+        <button type="button" id="sample-apply-paste">貼り付けを反映</button>
+        <button type="button" id="sample-load-example">入力例</button>
+        <button type="button" id="sample-clear-paste">クリア</button>
+      </div>
+      <div class="status" id="sample-paste-status"></div>
+    </div>
   </div>
   <div class="top">
     <div class="panel">
@@ -1420,26 +1450,28 @@ html>body{padding:0}</style>
       const avgBody = root.querySelector("#avg-body");
       const chart = root.querySelector("#chart");
       const fmt = (value, digits = 3) => Number.isFinite(value) ? value.toLocaleString("en-US", { maximumSignificantDigits: digits }) : "-";
-      let ntcCt = 27.6460654753957;
-      let std = [
-        { use: true, copy: 1e10, log: 10, ct: 12.8742979264328 },
-        { use: true, copy: 1e9, log: 9, ct: 12.0554830552965 },
-        { use: true, copy: 1e8, log: 8, ct: 14.0093492695434 },
-        { use: true, copy: 1e7, log: 7, ct: 17.6211724196753 },
-        { use: true, copy: 1e6, log: 6, ct: 20.5664427327878 },
-        { use: true, copy: 1e5, log: 5, ct: 24.3668972271087 },
-        { use: true, copy: 1e4, log: 4, ct: 28.5776032808391 },
-        { use: true, copy: 1e3, log: 3, ct: 28.0046569667665 }
+      const defaultStd = () => [
+        { use: true, copy: 1e10, log: 10, ct: NaN },
+        { use: true, copy: 1e9, log: 9, ct: NaN },
+        { use: true, copy: 1e8, log: 8, ct: NaN },
+        { use: true, copy: 1e7, log: 7, ct: NaN },
+        { use: true, copy: 1e6, log: 6, ct: NaN },
+        { use: true, copy: 1e5, log: 5, ct: NaN },
+        { use: true, copy: 1e4, log: 4, ct: NaN },
+        { use: true, copy: 1e3, log: 3, ct: NaN }
       ];
-      let unknowns = [
-        { include: true, well: "B01", name: "AAV 10e-1", ct: 12.82, dilution: 100 },
-        { include: true, well: "B02", name: "AAV 10e-2", ct: 16.43, dilution: 1000 },
-        { include: true, well: "B03", name: "AAV 10e-3", ct: 20.30, dilution: 10000 },
-        { include: true, well: "B04", name: "AAV 10e-4", ct: 24.11, dilution: 100000 },
-        { include: true, well: "B05", name: "AAV 10e-5", ct: 27.28, dilution: 1000000 },
-        { include: false, well: "B06", name: "AAV 10e-6", ct: 28.04, dilution: 10000000 },
-        { include: false, well: "B07", name: "AAV 10e-7", ct: 27.40, dilution: 100000000 }
+      const defaultUnknowns = () => [
+        { include: true, well: "B01", name: "AAV 10e-1", ct: NaN, dilution: 100 },
+        { include: true, well: "B02", name: "AAV 10e-2", ct: NaN, dilution: 1000 },
+        { include: true, well: "B03", name: "AAV 10e-3", ct: NaN, dilution: 10000 },
+        { include: true, well: "B04", name: "AAV 10e-4", ct: NaN, dilution: 100000 },
+        { include: true, well: "B05", name: "AAV 10e-5", ct: NaN, dilution: 1000000 },
+        { include: false, well: "B06", name: "AAV 10e-6", ct: NaN, dilution: 10000000 },
+        { include: false, well: "B07", name: "AAV 10e-7", ct: NaN, dilution: 100000000 }
       ];
+      let ntcCt = NaN;
+      let std = defaultStd();
+      let unknowns = defaultUnknowns();
       const groupSettings = new Map();
       const regression = rows => {
         const pts = rows.filter(d => d.use && Number.isFinite(d.log) && Number.isFinite(d.ct));
@@ -1517,123 +1549,154 @@ html>body{padding:0}</style>
           if (row.include === undefined) row.include = true;
         });
       };
-      const parsePastedRows = text => {
+      const findCol = (headerCells, aliases) => {
+        for (const alias of aliases) {
+          const i = headerCells.indexOf(alias);
+          if (i >= 0) return i;
+        }
+        for (const alias of aliases) {
+          const i = headerCells.findIndex(h => h.startsWith(alias));
+          if (i >= 0) return i;
+        }
+        return -1;
+      };
+      const isStd = c => c.startsWith("std") || c.startsWith("standard");
+      const isUnknown = c => c.startsWith("unkn");
+      const isNtc = c => c.startsWith("ntc");
+      const parseStdPaste = text => {
         const parsedStd = [];
-        const parsedUnknowns = [];
         let parsedNtc = NaN;
+        let usedPlaceholderLog = false;
+        let stdAutoLog = 10;
         const rows = text.split(/\r?\n/).map(row => row.split("\t").map(cell => cell.trim()));
-        const findCol = (headerCells, aliases) => {
-          for (const alias of aliases) {
-            const i = headerCells.indexOf(alias);
-            if (i >= 0) return i;
-          }
-          return -1;
+        const headerRow = rows.find(cells => cells.some(cell => /^(cq|ct|cт)$/i.test(cell)));
+        const headers = headerRow ? headerRow.map(cell => cell.toLowerCase()) : [];
+        const idx = {
+          content: findCol(headers, ["content", "task"]),
+          cq: findCol(headers, ["cq", "ct", "cт"]),
+          sq: findCol(headers, ["sq", "quantity", "starting quantity"])
         };
-        const headerRow = rows.find(cells =>
-          cells.some(cell => /^well$/i.test(cell)) &&
-          cells.some(cell => /^(content|task)$/i.test(cell))
-        );
-        const headers = headerRow ? headerRow.map(cell => cell.trim().toLowerCase()) : [];
+        const pushStd = ct => {
+          const log = stdAutoLog--;
+          usedPlaceholderLog = true;
+          parsedStd.push({ use: true, copy: 10 ** log, log, ct });
+        };
+        rows.forEach(cells => {
+          if (!cells.some(Boolean)) return;
+          if (cells === headerRow) return;
+          if (idx.cq >= 0) {
+            const content = idx.content >= 0 ? (cells[idx.content] || "").toLowerCase() : "";
+            if (isNtc(content)) {
+              const ntc = parseNumber(cells[idx.cq]);
+              if (Number.isFinite(ntc)) parsedNtc = ntc;
+              return;
+            }
+            const ct = parseNumber(cells[idx.cq]);
+            if (!Number.isFinite(ct)) return;
+            const sq = idx.sq >= 0 ? parseNumber(cells[idx.sq]) : NaN;
+            if (Number.isFinite(sq) && sq > 0) {
+              parsedStd.push({ use: true, copy: sq, log: Math.log10(sq), ct });
+            } else {
+              pushStd(ct);
+            }
+            return;
+          }
+          const lower = cells.map(cell => cell.toLowerCase());
+          if (lower.some(isNtc)) {
+            const numbers = cells.map(parseNumber).filter(v => Number.isFinite(v) && v > 5 && v < 60);
+            if (numbers.length) parsedNtc = numbers[numbers.length - 1];
+            return;
+          }
+          const numbers = cells.map(parseNumber).filter(Number.isFinite);
+          if (numbers.length >= 2) {
+            let copy = numbers.find(v => v > 100);
+            let log = numbers.find(v => v >= 0 && v <= 20 && v !== copy);
+            let ct = numbers.find(v => v > 5 && v < 60 && v !== log && v !== copy);
+            if (!Number.isFinite(copy) && Number.isFinite(log)) copy = 10 ** log;
+            if (!Number.isFinite(log) && Number.isFinite(copy) && copy > 0) log = Math.log10(copy);
+            if (!Number.isFinite(ct)) ct = numbers.find(v => v > 5 && v < 60);
+            if (Number.isFinite(ct) && Number.isFinite(copy) && Number.isFinite(log)) {
+              parsedStd.push({ use: true, copy, log, ct });
+              return;
+            }
+          }
+          if (numbers.length === 1 && numbers[0] > 5 && numbers[0] < 60) {
+            pushStd(numbers[0]);
+          }
+        });
+        return { parsedStd, parsedNtc, usedPlaceholderLog };
+      };
+      const parseSamplePaste = text => {
+        const parsedUnknowns = [];
+        const rows = text.split(/\r?\n/).map(row => row.split("\t").map(cell => cell.trim()));
+        const headerRow = rows.find(cells => cells.some(cell => /^(cq|ct|cт)$/i.test(cell)));
+        const headers = headerRow ? headerRow.map(cell => cell.toLowerCase()) : [];
         const idx = {
           content: findCol(headers, ["content", "task"]),
           well: findCol(headers, ["well"]),
           sample: findCol(headers, ["sample", "sample name"]),
-          cq: findCol(headers, ["cq", "ct", "cт"]),
-          sq: findCol(headers, ["sq", "quantity", "starting quantity"])
+          cq: findCol(headers, ["cq", "ct", "cт"])
         };
-        let stdAutoLog = 10;
-        let usedPlaceholderLog = false;
         rows.forEach(cells => {
           if (!cells.some(Boolean)) return;
           if (cells === headerRow) return;
-          if (idx.content >= 0 && idx.cq >= 0) {
-            const content = (cells[idx.content] || "").toLowerCase();
-            const cq = parseNumber(cells[idx.cq]);
-            const sq = idx.sq >= 0 ? parseNumber(cells[idx.sq]) : NaN;
-            if ((content === "std" || content === "standard") && Number.isFinite(cq)) {
-              if (Number.isFinite(sq) && sq > 0) {
-                parsedStd.push({ use: true, copy: sq, log: Math.log10(sq), ct: cq });
-              } else {
-                const log = stdAutoLog--;
-                usedPlaceholderLog = true;
-                parsedStd.push({ use: true, copy: 10 ** log, log, ct: cq });
-              }
-              return;
-            }
-            if (content === "ntc") {
-              if (Number.isFinite(cq)) parsedNtc = cq;
-              return;
-            }
-            if ((content === "unkn" || content === "unknown") && Number.isFinite(cq)) {
-              const name = (idx.sample >= 0 && cells[idx.sample]) ? cells[idx.sample] : `sample ${parsedUnknowns.length + 1}`;
-              parsedUnknowns.push({
-                include: true,
-                well: idx.well >= 0 ? cells[idx.well] : "",
-                name,
-                ct: cq,
-                dilution: inferDilution(name)
-              });
-              return;
-            }
+          if (idx.cq >= 0) {
+            const content = idx.content >= 0 ? (cells[idx.content] || "").toLowerCase() : "";
+            if (content && (isStd(content) || isNtc(content))) return;
+            const ct = parseNumber(cells[idx.cq]);
+            if (!Number.isFinite(ct)) return;
+            const name = (idx.sample >= 0 && cells[idx.sample]) ? cells[idx.sample] : `sample ${parsedUnknowns.length + 1}`;
+            parsedUnknowns.push({
+              include: true,
+              well: idx.well >= 0 ? cells[idx.well] : "",
+              name,
+              ct,
+              dilution: inferDilution(name)
+            });
+            return;
           }
-          const lower = cells.map(cell => cell.toLowerCase());
-          const typeIndex = lower.findIndex(cell => ["std", "ntc", "unkn", "unknown"].includes(cell));
           const numbers = cells.map(parseNumber);
-          if (typeIndex >= 0 && lower[typeIndex] === "std") {
-            const after = numbers.slice(typeIndex + 1).filter(Number.isFinite);
-            let copy = after.find(value => value > 100);
-            let log = after.find(value => value >= 0 && value <= 20 && value !== copy);
-            let ct = after.find(value => value > 5 && value < 60 && value !== log && value !== copy);
-            if (!Number.isFinite(copy) && Number.isFinite(log)) copy = 10 ** log;
-            if (!Number.isFinite(log) && Number.isFinite(copy) && copy > 0) log = Math.log10(copy);
-            if (Number.isFinite(copy) && Number.isFinite(log) && Number.isFinite(ct)) {
-              parsedStd.push({ use: true, copy, log, ct });
-            }
-            return;
-          }
-          if (typeIndex >= 0 && lower[typeIndex] === "ntc") {
-            const after = numbers.slice(typeIndex + 1).filter(value => Number.isFinite(value) && value > 5 && value < 60);
-            if (after.length) parsedNtc = after[after.length - 1];
-            return;
-          }
-          if (typeIndex >= 0 && (lower[typeIndex] === "unkn" || lower[typeIndex] === "unknown")) {
-            const sampleCells = cells.slice(typeIndex + 1).filter(cell => cell && !Number.isFinite(parseNumber(cell)) && !cell.startsWith("="));
-            const name = sampleCells[0] || `sample ${parsedUnknowns.length + 1}`;
-            const after = numbers.slice(typeIndex + 1).filter(value => Number.isFinite(value) && value > 0);
-            const ct = after.find(value => value > 5 && value < 60);
-            if (Number.isFinite(ct)) {
-              parsedUnknowns.push({
-                include: true,
-                well: cells[0] || "",
-                name,
-                ct,
-                dilution: inferDilution(name)
-              });
-            }
-            return;
-          }
-          const finite = numbers.filter(Number.isFinite);
-          if (finite.length === 2 && finite[0] >= 0 && finite[0] <= 20 && finite[1] > 5 && finite[1] < 60) {
-            parsedStd.push({ use: true, copy: 10 ** finite[0], log: finite[0], ct: finite[1] });
-          }
+          const ct = numbers.find(v => Number.isFinite(v) && v > 5 && v < 60);
+          if (!Number.isFinite(ct)) return;
+          const nameCell = cells.find(cell => cell && !Number.isFinite(parseNumber(cell)));
+          const name = nameCell || `sample ${parsedUnknowns.length + 1}`;
+          parsedUnknowns.push({
+            include: true,
+            well: /^[a-z]\d+$/i.test(cells[0]) ? cells[0] : "",
+            name,
+            ct,
+            dilution: inferDilution(name)
+          });
         });
-        return { parsedStd, parsedUnknowns, parsedNtc, usedPlaceholderLog };
+        return { parsedUnknowns };
       };
-      const applyPaste = () => {
-        const text = root.querySelector("#paste-box").value;
-        const { parsedStd, parsedUnknowns, parsedNtc, usedPlaceholderLog } = parsePastedRows(text);
-        if (!parsedStd.length && !parsedUnknowns.length && !Number.isFinite(parsedNtc)) {
-          root.querySelector("#paste-status").textContent = "認識できるStd/Unkn/NTC行がありません";
+      const applyStdPaste = () => {
+        const text = root.querySelector("#std-paste-box").value;
+        const { parsedStd, parsedNtc, usedPlaceholderLog } = parseStdPaste(text);
+        const status = root.querySelector("#std-paste-status");
+        if (!parsedStd.length && !Number.isFinite(parsedNtc)) {
+          status.textContent = "認識できるSTD/NTC行がありません";
           return;
         }
-        applyFixedDilutions(parsedUnknowns);
         if (parsedStd.length) std = parsedStd;
-        if (parsedUnknowns.length) unknowns = parsedUnknowns;
         if (Number.isFinite(parsedNtc)) ntcCt = parsedNtc;
         renderStd();
         update();
-        const note = usedPlaceholderLog ? "(STDにcopy数の列が無かったため、copy/logは仮の値です。標準系列の表で実際の値に修正してください)" : "";
-        root.querySelector("#paste-status").textContent = `Std ${parsedStd.length || std.length}点、未知 ${parsedUnknowns.length || unknowns.length}行、NTC ${Number.isFinite(ntcCt) ? fmt(ntcCt, 5) : "-"} を反映 ${note}`;
+        const note = usedPlaceholderLog ? "(copy数の列が無かったため、copy/logは仮の値です。表で実際の値に修正してください)" : "";
+        status.textContent = `Std ${parsedStd.length}点、NTC ${Number.isFinite(ntcCt) ? fmt(ntcCt, 5) : "-"} を反映 ${note}`;
+      };
+      const applySamplePaste = () => {
+        const text = root.querySelector("#sample-paste-box").value;
+        const { parsedUnknowns } = parseSamplePaste(text);
+        const status = root.querySelector("#sample-paste-status");
+        if (!parsedUnknowns.length) {
+          status.textContent = "認識できるサンプル行がありません";
+          return;
+        }
+        applyFixedDilutions(parsedUnknowns);
+        unknowns = parsedUnknowns;
+        update();
+        status.textContent = `サンプル ${parsedUnknowns.length}行を反映`;
       };
       const numberInput = (value, onChange, step = "any") => {
         const input = document.createElement("input");
@@ -1834,6 +1897,8 @@ html>body{padding:0}</style>
         const allX = std.map(d => d.log).filter(Number.isFinite);
         const allY = std.map(d => d.ct).filter(Number.isFinite);
         if (Number.isFinite(ntcCt)) allY.push(ntcCt);
+        if (!allX.length) allX.push(0, 10);
+        if (!allY.length) allY.push(10, 40);
         const minX = Math.floor(Math.min(...allX) - 0.5);
         const maxX = Math.ceil(Math.max(...allX) + 0.5);
         const minY = Math.max(0, Math.floor(Math.min(...allY) - 3));
@@ -1874,6 +1939,7 @@ html>body{padding:0}</style>
           label.textContent = `NTC Ct ${fmt(ntcCt, 4)}`;
         }
         std.forEach((d) => {
+          if (!Number.isFinite(d.log) || !Number.isFinite(d.ct)) return;
           make("circle", { cx: x(d.log), cy: y(d.ct), r: 5, class: d.use ? "std-point" : "excluded" });
         });
         if (fit) {
@@ -1954,28 +2020,46 @@ html>body{padding:0}</style>
           fallback.select();
         }
       });
-      root.querySelector("#apply-paste").addEventListener("click", applyPaste);
-      root.querySelector("#clear-paste").addEventListener("click", () => {
-        root.querySelector("#paste-box").value = "";
-        root.querySelector("#paste-status").textContent = "";
+      root.querySelector("#std-apply-paste").addEventListener("click", applyStdPaste);
+      root.querySelector("#std-clear-paste").addEventListener("click", () => {
+        root.querySelector("#std-paste-box").value = "";
+        root.querySelector("#std-paste-status").textContent = "";
+        std = defaultStd();
+        ntcCt = NaN;
+        renderStd();
+        update();
       });
-      root.querySelector("#load-example").addEventListener("click", () => {
-        root.querySelector("#paste-box").value = [
-          "Well\tFluor\tTarget\tContent\tSample\tCq\tSQ",
-          "A01\tSYBR\t\tStd\t\t12.87\t10000000000.00000",
-          "A02\tSYBR\t\tStd\t\t12.06\t1000000000.00000",
-          "A03\tSYBR\t\tStd\t\t14.01\t100000000.00000",
-          "A04\tSYBR\t\tStd\t\t17.62\t10000000.00000",
-          "A05\tSYBR\t\tStd\t\t20.57\t1000000.00000",
-          "A06\tSYBR\t\tStd\t\t24.37\t100000.00000",
-          "A07\tSYBR\t\tStd\t\t28.58\t10000.00000",
-          "A08\tSYBR\t\tStd\t\t28.00\t1000.00000",
-          "A09\tSYBR\t\tNTC\t\t27.65\t",
-          "B01\tSYBR\t\tUnkn\tAAV 10e-1\t12.82\t",
-          "B02\tSYBR\t\tUnkn\tAAV 10e-2\t16.43\t",
-          "B03\tSYBR\t\tUnkn\tAAV 10e-3\t20.30\t"
+      root.querySelector("#std-load-example").addEventListener("click", () => {
+        root.querySelector("#std-paste-box").value = [
+          "Well\tContent\tCq\tSQ",
+          "A01\tStd\t12.87\t10000000000.00000",
+          "A02\tStd\t12.06\t1000000000.00000",
+          "A03\tStd\t14.01\t100000000.00000",
+          "A04\tStd\t17.62\t10000000.00000",
+          "A05\tStd\t20.57\t1000000.00000",
+          "A06\tStd\t24.37\t100000.00000",
+          "A07\tStd\t28.58\t10000.00000",
+          "A08\tStd\t28.00\t1000.00000",
+          "A09\tNTC\t27.65\t"
         ].join("\n");
-        applyPaste();
+        applyStdPaste();
+      });
+      root.querySelector("#sample-apply-paste").addEventListener("click", applySamplePaste);
+      root.querySelector("#sample-clear-paste").addEventListener("click", () => {
+        root.querySelector("#sample-paste-box").value = "";
+        root.querySelector("#sample-paste-status").textContent = "";
+        unknowns = defaultUnknowns();
+        groupSettings.clear();
+        update();
+      });
+      root.querySelector("#sample-load-example").addEventListener("click", () => {
+        root.querySelector("#sample-paste-box").value = [
+          "Well\tSample\tCq",
+          "B01\tAAV 10e-1\t12.82",
+          "B02\tAAV 10e-2\t16.43",
+          "B03\tAAV 10e-3\t20.30"
+        ].join("\n");
+        applySamplePaste();
       });
       root.querySelector("#sort-asc").addEventListener("click", () => {
         std.sort((a, b) => a.log - b.log);
