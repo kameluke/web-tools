@@ -1142,6 +1142,9 @@ html>body{padding:0}</style>
       color: var(--bad);
       font-weight: 650;
     }
+    #qpcr-calculator .unknown-table tr.group-stripe td {
+      background: var(--soft);
+    }
     #qpcr-calculator .compact {
       color: var(--muted);
       font-size: 12px;
@@ -1497,6 +1500,7 @@ html>body{padding:0}</style>
   <details class="changelog">
     <summary>更新履歴</summary>
     <ul>
+      <li><span class="ver">v1.3</span><span class="date">2026/09/15</span><span>未知サンプルをサンプル単位で縞模様表示</span></li>
       <li><span class="ver">v1.2</span><span class="date">2026/09/15</span><span>貼り付け欄を分離・印刷をA4 1枚に対応</span></li>
       <li><span class="ver">v1.1</span><span class="date">2026/09/09</span><span>機能改善・印刷対応</span></li>
       <li><span class="ver">v1.0</span><span class="date">2026/08/21</span><span>初版</span></li>
@@ -1845,8 +1849,15 @@ html>body{padding:0}</style>
         const xs = std.filter(d => d.use).map(d => d.log);
         const minStdLog = Math.min(...xs);
         const maxStdLog = Math.max(...xs);
+        let stripeGroup = null;
+        let stripeOn = false;
         unknowns.forEach((row) => {
           const tr = document.createElement("tr");
+          if (row.group !== stripeGroup) {
+            stripeGroup = row.group;
+            stripeOn = !stripeOn;
+          }
+          if (stripeOn) tr.classList.add("group-stripe");
           const includeTd = document.createElement("td");
           const include = document.createElement("input");
           include.type = "checkbox";
@@ -1889,7 +1900,7 @@ html>body{padding:0}</style>
           }
           const isOut = Number.isFinite(logCopy) && (logCopy < minStdLog || logCopy > maxStdLog);
           if (isOut) {
-            tr.className = "bad-row";
+            tr.classList.add("bad-row");
           }
           if (!groups.has(row.group)) groups.set(row.group, { titers: [], out: 0 });
           const group = groups.get(row.group);
