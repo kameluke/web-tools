@@ -1238,7 +1238,10 @@ html>body{padding:0}</style>
     }
     @media print {
       @page {
-        margin: 10mm;
+        margin: 8mm;
+      }
+      html, body {
+        font-size: 11px;
       }
       #qpcr-calculator,
       #qpcr-calculator * {
@@ -1253,24 +1256,80 @@ html>body{padding:0}</style>
       #qpcr-calculator #sample-paste-status,
       #qpcr-calculator .no-print,
       #back-link {
-        display: none;
+        display: none !important;
       }
       #qpcr-calculator {
         max-width: none;
-        gap: 10px;
+        gap: 6px;
+        padding: 0;
         background: var(--page);
       }
       #qpcr-calculator .top {
         grid-template-columns: minmax(280px, 0.85fr) minmax(320px, 1.15fr);
+        gap: 8px;
+      }
+      #qpcr-calculator .panel {
+        padding: 8px 10px;
+        break-inside: avoid;
+      }
+      #qpcr-calculator tr {
+        break-inside: avoid;
+      }
+      #qpcr-calculator h3 {
+        margin: 0 0 5px;
+        font-size: 13px;
       }
       #qpcr-calculator .metrics {
         grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+        margin-bottom: 6px;
       }
-      #qpcr-calculator .panel {
-        break-inside: avoid;
+      #qpcr-calculator .metric {
+        padding: 4px 7px;
+        min-height: 0;
+      }
+      #qpcr-calculator .chart-panel svg {
+        flex: 0 0 200px;
+        min-height: 0;
+        height: 200px;
       }
       #qpcr-calculator table {
-        font-size: 12px;
+        font-size: 11px;
+      }
+      #qpcr-calculator th,
+      #qpcr-calculator td {
+        padding: 3px 5px;
+      }
+      #qpcr-calculator input[type="number"],
+      #qpcr-calculator input[type="text"],
+      #qpcr-calculator select {
+        padding: 2px 4px !important;
+        font-size: 11px;
+      }
+      #qpcr-calculator input[type="checkbox"] {
+        inline-size: 13px;
+        block-size: 13px;
+      }
+      #qpcr-calculator .metric strong {
+        font-size: 13px;
+        margin-top: 1px;
+      }
+      #qpcr-calculator .metric span {
+        font-size: 10px;
+      }
+      #qpcr-calculator .app-title {
+        font-size: 16px;
+        padding: 0 0 2px;
+      }
+      #qpcr-calculator .compact,
+      #qpcr-calculator .status {
+        font-size: 9px;
+        min-height: 0;
+        margin-top: 2px;
+      }
+      #qpcr-calculator .credit,
+      #qpcr-calculator .changelog {
+        display: none;
       }
       #qpcr-calculator .avg-table {
         table-layout: fixed;
