@@ -5,13 +5,72 @@
 <title>Reagent Calculator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  :root { color-scheme: light dark; }
+  :root { color-scheme: light dark; --header-h: 92px; }
+  html { scroll-behavior: smooth; }
   body {
     font-family: system-ui, -apple-system, sans-serif;
     max-width: 760px;
-    margin: 2rem auto 4rem;
+    margin: 0 0 4rem calc(200px + 1.5rem);
     padding: 0 1.5rem;
+    padding-top: calc(var(--header-h) + 1.5rem);
     line-height: 1.6;
+  }
+  section { scroll-margin-top: calc(var(--header-h) + 1rem); }
+  .pageheader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    background: Canvas;
+    border-bottom: 1px solid #ddd;
+    padding: 1rem 1.5rem 0.85rem;
+  }
+  .pageheader h1 { margin: 0.15rem 0 0.2rem; }
+  .pageheader p.lead { margin: 0; }
+  .sidenav {
+    position: fixed;
+    top: var(--header-h);
+    left: 0;
+    width: 200px;
+    height: calc(100vh - var(--header-h));
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 1.25rem 0.75rem;
+    border-right: 1px solid #ddd;
+    background: Canvas;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  .sidenav a {
+    display: block;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    text-decoration: none;
+    color: inherit;
+    font-size: 0.9rem;
+    line-height: 1.3;
+  }
+  .sidenav a small { display: block; font-size: 0.75rem; color: #888; font-weight: 400; }
+  .sidenav a:hover { background: color-mix(in oklab, #0969da 8%, transparent); }
+  .sidenav a.active { background: color-mix(in oklab, #0969da 15%, transparent); font-weight: 600; }
+  .sidenav a.active small { color: inherit; }
+  @media (max-width: 700px) {
+    .sidenav {
+      position: static;
+      width: 100%;
+      height: auto;
+      flex-direction: row;
+      flex-wrap: wrap;
+      border-right: none;
+      border-bottom: 1px solid #ddd;
+      padding: 0.75rem 1rem;
+      gap: 0.3rem;
+      margin-bottom: 1rem;
+    }
+    .sidenav a small { display: none; }
+    body { margin: 0 auto 4rem; }
   }
   a.back { font-size: 0.9rem; text-decoration: none; color: #0969da; }
   h1 { margin-bottom: 0.25rem; }
@@ -27,6 +86,7 @@
   table { border-collapse: collapse; width: 100%; margin: 0.75rem 0; }
   th, td { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 1px solid #eee; }
   th { font-size: 0.85rem; color: #666; font-weight: 600; }
+  tr.thick-bottom th, tr.thick-bottom td { border-bottom: 2px solid #333; }
   input[type="number"], input[type="text"] {
     width: 7rem;
     padding: 0.3rem 0.4rem;
@@ -35,7 +95,7 @@
   input[type="text"].name { width: 100%; }
   select { padding: 0.3rem; }
   .row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin: 0.5rem 0; }
-  .row label { min-width: 11rem; font-size: 0.95rem; }
+  .row label { width: 17rem; flex-shrink: 0; font-size: 0.95rem; white-space: nowrap; }
   .result {
     background: color-mix(in oklab, #0969da 8%, transparent);
     border-radius: 6px;
@@ -47,17 +107,31 @@
     p.lead, section p.note, th { color: #aaa; }
     section { border-color: #444; }
     th, td { border-color: #333; }
+    tr.thick-bottom th, tr.thick-bottom td { border-color: #ccc; }
+    .pageheader { border-color: #444; }
+    .sidenav { border-color: #444; }
+    .sidenav a small { color: #999; }
+    .sidenav a:hover { background: color-mix(in oklab, #6cb6ff 10%, transparent); }
+    .sidenav a.active { background: color-mix(in oklab, #6cb6ff 18%, transparent); }
     a.back { color: #6cb6ff; }
     .result { background: color-mix(in oklab, #6cb6ff 12%, transparent); }
   }
 </style>
 </head>
 <body>
-  <a class="back" href="../../">← Web Tools</a>
-  <h1>Reagent Calculator</h1>
-  <p class="lead">試薬調製・希釈・DNAモル濃度・マスターミックス計算 / Reagent preparation, dilution, DNA molarity, and master mix calculators</p>
+  <header class="pageheader">
+    <a class="back" href="../../">← Web Tools</a>
+    <h1>Reagent Calculator</h1>
+    <p class="lead">試薬調製・希釈・DNAモル濃度・PCRマスターミックス計算 / Reagent preparation, dilution, DNA molarity, and PCR master mix calculators</p>
+  </header>
+  <nav class="sidenav" aria-label="Sections">
+    <a href="#molar">⚗️ Molar Solution<small>溶液調製</small></a>
+    <a href="#dilution">💧 Dilution<small>希釈</small></a>
+    <a href="#dnamol">🧬 DNA Molarity<small>DNAモル濃度</small></a>
+    <a href="#mastermix">🧫 PCR Master Mix<small>PCRマスターミックス</small></a>
+  </nav>
 
-  <section>
+  <section id="molar">
     <h2>⚗️ Molar Solution 溶液調製</h2>
     <div class="row">
       <label for="mol-mw">Molecular weight 分子量 (g/mol)</label>
@@ -88,7 +162,7 @@
     </div>
   </section>
 
-  <section>
+  <section id="dilution">
     <h2>💧 Dilution 希釈</h2>
     <div class="row">
       <label for="dil-stock-conc">Stock concentration 原液濃度</label>
@@ -125,7 +199,7 @@
     </div>
   </section>
 
-  <section>
+  <section id="dnamol">
     <h2>🧬 DNA Molarity DNAモル濃度</h2>
     <p class="note">dsDNA = 660 g/mol/bp として近似 / approximated as 660 g/mol/bp for dsDNA</p>
     <div class="row">
@@ -151,26 +225,45 @@
     </div>
   </section>
 
-  <section>
-    <h2>🧫 Master Mix マスターミックス</h2>
+  <section id="mastermix">
+    <h2>🧫 PCR Master Mix PCRマスターミックス</h2>
     <div class="row">
       <label for="mm-samples">Number of reactions 反応数</label>
       <input type="number" id="mm-samples" value="8" step="any">
     </div>
     <div class="row">
+      <label for="mm-template-vol">Template volume 鋳型量 (µL)</label>
+      <input type="number" id="mm-template-vol" value="1" step="any">
+    </div>
+    <div class="row">
       <label for="mm-extra">Extra volume 余分 (%)</label>
       <input type="number" id="mm-extra" value="10" step="any">
     </div>
+    <div class="row">
+      <label for="mm-total-vol">Total volume/reaction 反応液量 (µL)</label>
+      <input type="number" id="mm-total-vol" value="20" step="any">
+    </div>
+    <p class="note">Template volumeはmaster mixの計算(×反応数)から除外し、各チューブへ個別に添加します。Waterの量は反応液量から自動計算されます。<br>Template volume is excluded from the master mix total and added individually to each tube. Water volume is calculated automatically to fill the reaction volume.</p>
     <table>
       <thead>
-        <tr><th>Reagent 試薬</th><th>Per reaction 1反応あたり (µL)</th><th>Total 合計 (µL)</th></tr>
+        <tr><th>Reagent 試薬</th><th>Per reaction 1反応あたり (µL)</th><th>Master mix total 合計 (µL)</th></tr>
       </thead>
       <tbody id="mm-rows"></tbody>
       <tfoot>
-        <tr>
-          <th>TOTAL</th>
+        <tr class="thick-bottom">
+          <th>Master mix TOTAL</th>
           <th id="mm-total-per">–</th>
           <th id="mm-total-all">–</th>
+        </tr>
+        <tr>
+          <th>Template</th>
+          <th id="mm-template-per">–</th>
+          <th id="mm-template-all"></th>
+        </tr>
+        <tr>
+          <th>Total</th>
+          <th id="mm-final-per">–</th>
+          <th id="mm-final-all"></th>
         </tr>
       </tfoot>
     </table>
@@ -252,24 +345,33 @@
 
   // Master Mix
   const mmSamples = document.getElementById('mm-samples');
+  const mmTemplateVol = document.getElementById('mm-template-vol');
   const mmExtra = document.getElementById('mm-extra');
+  const mmTotalVol = document.getElementById('mm-total-vol');
   const mmRows = document.getElementById('mm-rows');
   const mmTotalPer = document.getElementById('mm-total-per');
   const mmTotalAll = document.getElementById('mm-total-all');
+  const mmTemplatePer = document.getElementById('mm-template-per');
+  const mmFinalPer = document.getElementById('mm-final-per');
 
+  // role: 'normal' = master mixに含めて反応数分プールする試薬
+  //       'water'  = 反応液量から自動計算される水
+  // DNA(鋳型)はテーブルに含めず、上部の Template volume 入力で扱う
   const defaultReagents = [
-    { name: 'Buffer', vol: 5 },
-    { name: 'Enzyme', vol: 0.5 },
-    { name: 'Primer', vol: 1 },
-    { name: 'DNA', vol: 1 },
-    { name: 'Water', vol: 12.5 },
+    { name: 'Buffer', vol: 5, role: 'normal' },
+    { name: 'Enzyme', vol: 0.5, role: 'normal' },
+    { name: 'Primer F', vol: 1, role: 'normal' },
+    { name: 'Primer R', vol: 1, role: 'normal' },
+    { name: 'Water', vol: 0, role: 'water' },
   ];
 
-  defaultReagents.forEach((r, i) => {
+  defaultReagents.forEach((r) => {
     const tr = document.createElement('tr');
+    tr.dataset.role = r.role;
+    const volAttrs = r.role === 'water' ? ' readonly title="反応液量から自動計算 / auto-calculated"' : '';
     tr.innerHTML =
       '<td><input type="text" class="name" data-role="name" value="' + r.name + '"></td>' +
-      '<td><input type="number" data-role="vol" value="' + r.vol + '" step="any"></td>' +
+      '<td><input type="number" data-role="vol" value="' + r.vol + '" step="any"' + volAttrs + '></td>' +
       '<td data-role="total">–</td>';
     mmRows.appendChild(tr);
   });
@@ -277,25 +379,82 @@
   function updateMasterMix() {
     const samples = num(mmSamples);
     const extra = num(mmExtra);
+    const totalVol = num(mmTotalVol);
+    const dnaVol = num(mmTemplateVol);
     const factor = samples * (1 + extra / 100);
-    let sumPer = 0;
-    mmRows.querySelectorAll('tr').forEach(tr => {
-      const volInput = tr.querySelector('[data-role="vol"]');
-      const vol = parseFloat(volInput.value) || 0;
-      sumPer += vol;
-      tr.querySelector('[data-role="total"]').textContent = round(vol * factor, 2);
+    const rows = Array.from(mmRows.querySelectorAll('tr'));
+    const waterRow = rows.find(tr => tr.dataset.role === 'water');
+
+    let sumNormal = 0;
+    rows.forEach(tr => {
+      if (tr.dataset.role === 'normal') {
+        sumNormal += parseFloat(tr.querySelector('[data-role="vol"]').value) || 0;
+      }
     });
-    mmTotalPer.textContent = round(sumPer, 2);
-    mmTotalAll.textContent = round(sumPer * factor, 2);
+
+    const waterVolRaw = totalVol - dnaVol - sumNormal;
+    const waterVol = Math.max(waterVolRaw, 0);
+    if (waterRow) {
+      const waterInput = waterRow.querySelector('[data-role="vol"]');
+      waterInput.value = round(waterVol, 3);
+      waterInput.style.color = waterVolRaw < 0 ? '#d1242f' : '';
+      waterInput.title = waterVolRaw < 0
+        ? '反応液量が不足しています / total volume is smaller than template + other reagents'
+        : '反応液量から自動計算 / auto-calculated';
+    }
+
+    let sumMasterMix = 0;
+    rows.forEach(tr => {
+      const vol = parseFloat(tr.querySelector('[data-role="vol"]').value) || 0;
+      tr.querySelector('[data-role="total"]').textContent = round(vol * factor, 2);
+      sumMasterMix += vol;
+    });
+
+    mmTotalPer.textContent = round(sumMasterMix, 2);
+    mmTotalAll.textContent = round(sumMasterMix * factor, 2);
+
+    mmTemplatePer.textContent = round(dnaVol, 2);
+
+    const finalPer = sumMasterMix + dnaVol;
+    mmFinalPer.textContent = round(finalPer, 2);
   }
 
   mmRows.addEventListener('input', updateMasterMix);
-  [mmSamples, mmExtra].forEach(el => el.addEventListener('input', updateMasterMix));
+  [mmSamples, mmTemplateVol, mmExtra, mmTotalVol].forEach(el => el.addEventListener('input', updateMasterMix));
 
   updateMolar();
   updateDilution();
   updateDna();
   updateMasterMix();
+
+  // Sidebar nav active state
+  const navLinks = Array.from(document.querySelectorAll('.sidenav a'));
+  const navSections = navLinks
+    .map(a => document.getElementById(a.getAttribute('href').slice(1)))
+    .filter(Boolean);
+
+  function setActive(id) {
+    navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+  }
+
+  if ('IntersectionObserver' in window && navSections.length) {
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries.filter(e => e.isIntersecting);
+      if (visible.length) {
+        visible.sort((a, b) => Math.abs(a.boundingClientRect.top) - Math.abs(b.boundingClientRect.top));
+        setActive(visible[0].target.id);
+      }
+    }, { rootMargin: '-10% 0px -70% 0px' });
+    navSections.forEach(sec => observer.observe(sec));
+  }
+
+  // Keep --header-h in sync with the actual fixed header height
+  const pageHeader = document.querySelector('.pageheader');
+  function syncHeaderHeight() {
+    document.documentElement.style.setProperty('--header-h', pageHeader.offsetHeight + 'px');
+  }
+  syncHeaderHeight();
+  window.addEventListener('resize', syncHeaderHeight);
 })();
 </script>
 </body>
