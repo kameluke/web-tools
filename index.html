@@ -7,54 +7,103 @@
 <style>
   :root {
     color-scheme: light dark;
-  }
-  body {
-    font-family: system-ui, -apple-system, sans-serif;
-    max-width: 720px;
-    margin: 3rem auto;
-    padding: 0 1.5rem;
-    line-height: 1.6;
-  }
-  h1 { margin-bottom: 0.25rem; }
-  p.lead { color: #666; margin-top: 0; }
-  ul.tools { list-style: none; padding: 0; }
-  ul.tools li {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 1rem 1.25rem;
-    margin-bottom: 1rem;
-  }
-  .tool-name { font-size: 1.1rem; font-weight: 600; margin: 0 0 0.25rem; }
-  .tool-desc { margin: 0 0 0.75rem; color: #555; }
-  .tool-links a {
-    display: inline-block;
-    margin-right: 1rem;
-    text-decoration: none;
-    font-weight: 500;
-  }
-  .tool-links a.launch { color: #0969da; }
-  .tool-links a.source { color: #57606a; }
-  footer {
-    margin-top: 3rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #ddd;
-    color: #555;
-    font-size: 0.95rem;
-  }
-  footer p { margin: 0 0 1rem; }
-  footer .contact { margin-top: 1rem; }
-  .support-buttons {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --ink: #1d1d1f;
+    --muted: #6e6e73;
+    --line: rgba(0, 0, 0, 0.08);
+    --fill-strong: #e8e8ed;
+    --accent: #0071e3;
+    --accent-hover: #0077ed;
+    --accent-soft: rgba(0, 113, 227, 0.1);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Segoe UI", sans-serif;
   }
   @media (prefers-color-scheme: dark) {
-    p.lead, .tool-desc { color: #aaa; }
-    ul.tools li { border-color: #444; }
-    .tool-links a.launch { color: #6cb6ff; }
-    .tool-links a.source { color: #9aa4b2; }
-    footer { border-color: #444; color: #aaa; }
+    :root {
+      --bg: #000000;
+      --card: #1c1c1e;
+      --ink: #f5f5f7;
+      --muted: #98989d;
+      --line: rgba(255, 255, 255, 0.12);
+      --fill-strong: #3a3a3c;
+      --accent: #2997ff;
+      --accent-hover: #4aa8ff;
+      --accent-soft: rgba(41, 151, 255, 0.16);
+      --shadow: none;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 56px 24px 48px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1 {
+    margin: 0;
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  p.lead {
+    margin: 10px 0 32px;
+    color: var(--muted);
+    font-size: 17px;
+    letter-spacing: -0.01em;
+  }
+  ul.tools { display: grid; gap: 16px; margin: 0; padding: 0; list-style: none; }
+  ul.tools li {
+    padding: 22px 24px;
+    border-radius: 20px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+  .tool-name {
+    margin: 0 0 6px;
+    font-size: 21px;
+    font-weight: 650;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+  .tool-desc { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
+  .tool-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .tool-links a {
+    padding: 6px 16px;
+    border-radius: 980px;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .tool-links a:active { opacity: 0.7; }
+  .tool-links a:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 1px; }
+  .tool-links a.launch { background: var(--accent); color: #fff; }
+  .tool-links a.launch:hover { background: var(--accent-hover); }
+  .tool-links a.source { color: var(--accent); }
+  .tool-links a.source:hover { background: var(--accent-soft); }
+  footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 13px;
+  }
+  footer p { margin: 0; }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  @media (max-width: 760px) {
+    body { padding: 40px 16px 36px; }
+    h1 { font-size: 32px; }
+    ul.tools li { padding: 18px; }
   }
 </style>
 </head>

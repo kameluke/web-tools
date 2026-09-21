@@ -5,29 +5,79 @@
 <title>Reagent Calculator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  :root { color-scheme: light dark; --header-h: 92px; }
-  html { scroll-behavior: smooth; }
+  :root {
+    color-scheme: light dark;
+    --header-h: 92px;
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --ink: #1d1d1f;
+    --muted: #6e6e73;
+    --line: rgba(0, 0, 0, 0.08);
+    --fill: #f5f5f7;
+    --fill-strong: #e8e8ed;
+    --accent: #0071e3;
+    --accent-soft: rgba(0, 113, 227, 0.1);
+    --bad: #d70015;
+    --bar: rgba(245, 245, 247, 0.8);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --card: #1c1c1e;
+      --ink: #f5f5f7;
+      --muted: #98989d;
+      --line: rgba(255, 255, 255, 0.12);
+      --fill: #2c2c2e;
+      --fill-strong: #3a3a3c;
+      --accent: #2997ff;
+      --accent-soft: rgba(41, 151, 255, 0.16);
+      --bad: #ff453a;
+      --bar: rgba(0, 0, 0, 0.72);
+      --shadow: none;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
   body {
-    font-family: system-ui, -apple-system, sans-serif;
     max-width: 760px;
     margin: 0 0 4rem calc(200px + 1.5rem);
-    padding: 0 1.5rem;
-    padding-top: calc(var(--header-h) + 1.5rem);
-    line-height: 1.6;
+    padding: calc(var(--header-h) + 1.25rem) 1.5rem 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
   }
   section { scroll-margin-top: calc(var(--header-h) + 1rem); }
+
+  /* ---------- Header / side navigation ---------- */
   .pageheader {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 20;
-    background: Canvas;
-    border-bottom: 1px solid #ddd;
-    padding: 1rem 1.5rem 0.85rem;
+    padding: 14px 24px 12px;
+    background: var(--bar);
+    border-bottom: 1px solid var(--line);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
   }
-  .pageheader h1 { margin: 0.15rem 0 0.2rem; }
-  .pageheader p.lead { margin: 0; }
+  a.back { color: var(--accent); font-size: 13px; text-decoration: none; }
+  a.back:hover { text-decoration: underline; }
+  .pageheader h1 {
+    margin: 2px 0 2px;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .pageheader p.lead { margin: 0; color: var(--muted); font-size: 14px; }
+
   .sidenav {
     position: fixed;
     top: var(--header-h);
@@ -35,104 +85,140 @@
     width: 200px;
     height: calc(100vh - var(--header-h));
     overflow-y: auto;
-    box-sizing: border-box;
-    padding: 1.25rem 0.75rem;
-    border-right: 1px solid #ddd;
-    background: Canvas;
+    padding: 20px 12px;
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: 2px;
   }
   .sidenav a {
     display: block;
-    padding: 0.5rem 0.75rem;
-    border-radius: 6px;
-    text-decoration: none;
-    color: inherit;
-    font-size: 0.9rem;
+    padding: 7px 12px;
+    border-radius: 10px;
+    color: var(--ink);
+    font-size: 14px;
     line-height: 1.3;
+    text-decoration: none;
+    transition: background 0.15s;
   }
-  .sidenav a small { display: block; font-size: 0.75rem; color: #888; font-weight: 400; }
-  .sidenav a:hover { background: color-mix(in oklab, #0969da 8%, transparent); }
-  .sidenav a.active { background: color-mix(in oklab, #0969da 15%, transparent); font-weight: 600; }
-  .sidenav a.active small { color: inherit; }
+  .sidenav a small { display: block; color: var(--muted); font-size: 11.5px; font-weight: 400; }
+  .sidenav a:hover { background: var(--fill-strong); }
+  .sidenav a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .sidenav a.active small { color: inherit; opacity: 0.8; }
+
+  /* ---------- Cards ---------- */
+  section {
+    margin: 0 0 16px;
+    padding: 20px 22px;
+    border-radius: 20px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+  section h2 {
+    margin: 0 0 14px;
+    font-size: 19px;
+    font-weight: 650;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+  section p.note { margin: 6px 0 12px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+  section h2 + p.note { margin-top: -6px; }
+
+  /* ---------- Form controls ---------- */
+  input[type="number"], input[type="text"], select {
+    padding: 6px 10px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: var(--fill);
+    color: var(--ink);
+    font: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+  input[type="number"], input[type="text"] { width: 7.5rem; }
+  input[type="text"].name { width: 100%; }
+  select {
+    padding-right: 28px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2386868b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+  }
+  input[type="number"]:hover, input[type="text"]:hover, select:hover { background-color: var(--fill-strong); }
+  input[type="number"]:focus, input[type="text"]:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    background-color: var(--card);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  input[readonly] { background: transparent; color: var(--muted); cursor: default; }
+  input[readonly]:hover { background: transparent; }
+
+  .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; }
+  .row label { width: 17rem; flex-shrink: 0; color: var(--muted); font-size: 13px; }
+
+  /* ---------- Results ---------- */
+  .result {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: var(--accent-soft);
+    line-height: 1.7;
+  }
+  .result strong {
+    font-size: 17px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Tables ---------- */
+  table { width: 100%; margin: 4px 0 0; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
+  th { color: var(--muted); font-size: 12px; font-weight: 500; }
+  th:first-child, td:first-child { padding-left: 0; }
+  th:last-child, td:last-child { padding-right: 0; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tfoot th { color: var(--ink); font-size: 13px; font-weight: 600; }
+  tr.thick-bottom th, tr.thick-bottom td { border-bottom: 1.5px solid var(--muted); }
+  tfoot tr:last-child th { border-bottom: 0; }
+
   @media (max-width: 700px) {
+    body { margin: 0 auto 4rem; padding: calc(var(--header-h) + 0.5rem) 1rem 0; }
+    .pageheader { padding: 12px 16px 10px; }
+    .pageheader h1 { font-size: 24px; }
+    .pageheader p.lead { display: none; }
     .sidenav {
       position: static;
       width: 100%;
       height: auto;
+      padding: 0 0 12px;
       flex-direction: row;
       flex-wrap: wrap;
-      border-right: none;
-      border-bottom: 1px solid #ddd;
-      padding: 0.75rem 1rem;
-      gap: 0.3rem;
-      margin-bottom: 1rem;
+      gap: 6px;
     }
+    .sidenav a { padding: 6px 14px; border-radius: 980px; background: var(--card); font-size: 13px; }
     .sidenav a small { display: none; }
-    body { margin: 0 auto 4rem; }
-  }
-  a.back { font-size: 0.9rem; text-decoration: none; color: #0969da; }
-  h1 { margin-bottom: 0.25rem; }
-  p.lead { color: #666; margin-top: 0; }
-  section {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 1.25rem 1.5rem;
-    margin: 1.5rem 0;
-  }
-  section h2 { margin-top: 0; font-size: 1.15rem; }
-  section p.note { color: #666; font-size: 0.9rem; margin-top: -0.5rem; }
-  table { border-collapse: collapse; width: 100%; margin: 0.75rem 0; }
-  th, td { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 1px solid #eee; }
-  th { font-size: 0.85rem; color: #666; font-weight: 600; }
-  tr.thick-bottom th, tr.thick-bottom td { border-bottom: 2px solid #333; }
-  input[type="number"], input[type="text"] {
-    width: 7rem;
-    padding: 0.3rem 0.4rem;
-    box-sizing: border-box;
-  }
-  input[type="text"].name { width: 100%; }
-  select { padding: 0.3rem; }
-  .row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin: 0.5rem 0; }
-  .row label { width: 17rem; flex-shrink: 0; font-size: 0.95rem; white-space: nowrap; }
-  .result {
-    background: color-mix(in oklab, #0969da 8%, transparent);
-    border-radius: 6px;
-    padding: 0.75rem 1rem;
-    margin-top: 0.75rem;
-  }
-  .result strong { font-size: 1.05rem; }
-  @media (prefers-color-scheme: dark) {
-    p.lead, section p.note, th { color: #aaa; }
-    section { border-color: #444; }
-    th, td { border-color: #333; }
-    tr.thick-bottom th, tr.thick-bottom td { border-color: #ccc; }
-    .pageheader { border-color: #444; }
-    .sidenav { border-color: #444; }
-    .sidenav a small { color: #999; }
-    .sidenav a:hover { background: color-mix(in oklab, #6cb6ff 10%, transparent); }
-    .sidenav a.active { background: color-mix(in oklab, #6cb6ff 18%, transparent); }
-    a.back { color: #6cb6ff; }
-    .result { background: color-mix(in oklab, #6cb6ff 12%, transparent); }
+    section { padding: 18px; }
+    .row label { width: 100%; }
   }
 </style>
 </head>
 <body>
   <header class="pageheader">
-    <a class="back" href="../../">← Web Tools</a>
+    <a class="back" href="../../">&lsaquo; Web Tools</a>
     <h1>Reagent Calculator</h1>
     <p class="lead">試薬調製・希釈・DNAモル濃度・PCRマスターミックス計算 / Reagent preparation, dilution, DNA molarity, and PCR master mix calculators</p>
   </header>
   <nav class="sidenav" aria-label="Sections">
-    <a href="#molar">⚗️ Molar Solution<small>溶液調製</small></a>
-    <a href="#dilution">💧 Dilution<small>希釈</small></a>
-    <a href="#dnamol">🧬 DNA Molarity<small>DNAモル濃度</small></a>
-    <a href="#mastermix">🧫 PCR Master Mix<small>PCRマスターミックス</small></a>
+    <a href="#molar">Molar Solution<small>溶液調製</small></a>
+    <a href="#dilution">Dilution<small>希釈</small></a>
+    <a href="#dnamol">DNA Molarity<small>DNAモル濃度</small></a>
+    <a href="#mastermix">PCR Master Mix<small>PCRマスターミックス</small></a>
   </nav>
 
   <section id="molar">
-    <h2>⚗️ Molar Solution 溶液調製</h2>
+    <h2>Molar Solution 溶液調製</h2>
     <div class="row">
       <label for="mol-mw">Molecular weight 分子量 (g/mol)</label>
       <input type="number" id="mol-mw" value="121.14" step="any">
@@ -163,7 +249,7 @@
   </section>
 
   <section id="dilution">
-    <h2>💧 Dilution 希釈</h2>
+    <h2>Dilution 希釈</h2>
     <div class="row">
       <label for="dil-stock-conc">Stock concentration 原液濃度</label>
       <input type="number" id="dil-stock-conc" value="1" step="any">
@@ -200,7 +286,7 @@
   </section>
 
   <section id="dnamol">
-    <h2>🧬 DNA Molarity DNAモル濃度</h2>
+    <h2>DNA Molarity DNAモル濃度</h2>
     <p class="note">dsDNA = 660 g/mol/bp として近似 / approximated as 660 g/mol/bp for dsDNA</p>
     <div class="row">
       <label for="dna-bp">DNA length 塩基長 (bp)</label>
@@ -226,7 +312,7 @@
   </section>
 
   <section id="mastermix">
-    <h2>🧫 PCR Master Mix PCRマスターミックス</h2>
+    <h2>PCR Master Mix PCRマスターミックス</h2>
     <div class="row">
       <label for="mm-samples">Number of reactions 反応数</label>
       <input type="number" id="mm-samples" value="8" step="any">
@@ -397,7 +483,7 @@
     if (waterRow) {
       const waterInput = waterRow.querySelector('[data-role="vol"]');
       waterInput.value = round(waterVol, 3);
-      waterInput.style.color = waterVolRaw < 0 ? '#d1242f' : '';
+      waterInput.style.color = waterVolRaw < 0 ? 'var(--bad)' : '';
       waterInput.title = waterVolRaw < 0
         ? '反応液量が不足しています / total volume is smaller than template + other reagents'
         : '反応液量から自動計算 / auto-calculated';
