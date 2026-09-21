@@ -3,1314 +3,510 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="referrer" content="no-referrer">
-<title>Protein Quantification Fragment</title>
-<style>:root {
-  color-scheme: light dark;
-  background-color: var(
-    --background,
-    var(--color-background-primary, light-dark(rgb(255 255 255), rgb(24 24 24)))
-  ) !important;
-
-  /* Agent-facing contract; keep in sync with SKILL.md. */
-  --background: var(
-    --color-background-primary,
-    light-dark(rgb(255 255 255), rgb(24 24 24))
-  );
-  --foreground: var(
-    --color-text-primary,
-    light-dark(rgb(26 28 31), rgb(255 255 255))
-  );
-  --card: color-mix(in oklab, var(--foreground) 5%, var(--background));
-  --card-foreground: var(
-    --color-text-primary,
-    light-dark(rgb(26 28 31), rgb(255 255 255))
-  );
-  --popover: var(
-    --color-background-secondary,
-    light-dark(rgb(255 255 255), rgb(45 45 45))
-  );
-  --popover-foreground: var(
-    --color-text-primary,
-    light-dark(rgb(26 28 31), rgb(255 255 255))
-  );
-  --primary: var(
-    --color-text-info,
-    light-dark(rgb(51 156 255), rgb(131 195 255))
-  );
-  --primary-foreground: var(
-    --color-text-inverse,
-    light-dark(rgb(255 255 255), rgb(13 13 13))
-  );
-  --secondary: var(
-    --color-background-secondary,
-    light-dark(rgb(255 255 255 / 96%), rgb(54 54 54 / 96%))
-  );
-  --secondary-foreground: var(
-    --color-text-primary,
-    light-dark(rgb(26 28 31), rgb(255 255 255))
-  );
-  --muted: color-mix(in srgb, var(--foreground) 10%, transparent);
-  --muted-foreground: var(
-    --color-text-secondary,
-    light-dark(rgb(26 28 31 / 49.4%), rgb(255 255 255 / 49.8%))
-  );
-  --accent: var(
-    --color-background-info,
-    light-dark(rgb(229 242 255), rgb(13 39 63))
-  );
-  --accent-foreground: var(
-    --color-text-info,
-    light-dark(rgb(51 156 255), rgb(131 195 255))
-  );
-  --destructive: var(
-    --color-text-warning,
-    light-dark(rgb(226 85 7), rgb(255 133 73))
-  );
-  --border: var(
-    --color-border-secondary,
-    light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%))
-  );
-  --input: var(
-    --color-border-primary,
-    light-dark(
-      rgb(26 28 31 / 11.8%),
-      color-mix(in oklab, rgb(0 0 0) 10%, transparent)
-    )
-  );
-  --ring: var(
-    --color-ring-primary,
-    light-dark(rgb(51 156 255), rgb(131 195 255 / 76%))
-  );
-  --font-size-base: var(--font-text-md-size, 14px);
-  --blue: light-dark(rgb(51 156 255), rgb(51 156 255));
-  --orange: light-dark(rgb(226 85 7), rgb(251 106 34));
-  --green: light-dark(rgb(0 162 64), rgb(64 201 119));
-  --red: light-dark(rgb(224 46 42), rgb(255 103 100));
-  --purple: light-dark(rgb(146 79 247), rgb(173 123 249));
-  --yellow: light-dark(rgb(255 195 0), rgb(255 210 64));
-  --viz-series-1: var(--primary);
-  --viz-series-2: light-dark(rgb(243 136 59), rgb(245 154 86));
-  --viz-series-3: light-dark(rgb(93 201 119), rgb(116 213 139));
-  --viz-series-4: light-dark(rgb(235 119 177), rgb(240 143 192));
-  --viz-series-5: light-dark(rgb(155 121 236), rgb(170 145 239));
-  --viz-series-6: light-dark(rgb(58 185 177), rgb(90 203 194));
-
-  /* Internal implementation variables; not part of the agent contract. */
-  --font-sans: -apple-system, system-ui, "Segoe UI", sans-serif;
-  --font-mono:
-    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
-    monospace;
-  --font-size-normal: max(11px, var(--font-size-base));
-  --font-size-tooltip: calc(var(--font-size-base) - 1px);
-  --font-size-small: max(11px, calc(var(--font-size-base) - 2px));
-  --font-size-h1: calc(var(--font-size-normal) * 1.7142857143);
-  --font-size-h2: calc(var(--font-size-normal) * 1.4285714286);
-  --font-size-h3: calc(var(--font-size-normal) * 1.2857142857);
-  --font-weight-normal: 430;
-  --font-weight-medium: 500;
-  --line-height-normal: calc(var(--font-size-normal) * 1.5);
-  --line-height-tooltip: calc(var(--font-size-tooltip) * 1.4285714286);
-  --line-height-small: calc(var(--font-size-small) + 4px);
-  --radius: var(--border-radius-lg, 12.5px);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-2xl: calc(var(--radius) * 1.6);
-  --radius-full: 9999px;
-  --shadow-sm: 0 1px 2px -1px rgb(0 0 0 / 8%);
-  --checkmark-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 17 17'%3E%3Cpath d='M12.8961 3.64101C13.1297 3.41418 13.4984 3.37523 13.7779 3.56581C14.0571 3.75635 14.1554 4.11331 14.0299 4.41347L13.9615 4.53847L7.71151 13.7045C7.59411 13.8767 7.4063 13.9877 7.19881 14.0072C6.99136 14.0267 6.78564 13.9533 6.63826 13.806L2.88826 10.056L2.79842 9.9457C2.6192 9.67407 2.64927 9.30496 2.88826 9.06581C3.12738 8.82669 3.49647 8.79676 3.76815 8.97597L3.8785 9.06581L7.03084 12.2182L12.8053 3.74941L12.8961 3.64101Z'/%3E%3C/svg%3E");
-
-  /* Legacy aliases; not part of the current agent contract. */
-  --viz-bg: transparent;
-  --viz-panel: var(--card);
-  --viz-border: var(--border);
-  --viz-text: var(--foreground);
-  --viz-muted: var(--muted-foreground);
-  --viz-accent: var(--primary);
-  --viz-accent-text: var(--primary-foreground);
-  --viz-accent-bg: var(--accent);
-  --viz-font-size: var(--font-size-base);
-  --viz-warning: var(--destructive);
-}
-
-:root[data-theme="light"] {
-  color-scheme: light;
-}
-
-:root[data-theme="dark"] {
-  color-scheme: dark;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html > body {
-  /* Preserve MCP aliases for older inline renderers without creating :root cycles. */
-  --color-background-primary: var(
-    --background,
-    light-dark(rgb(255 255 255), rgb(24 24 24))
-  );
-  --color-text-primary: var(
-    --foreground,
-    light-dark(rgb(26 28 31), rgb(255 255 255))
-  );
-  --color-border-secondary: var(
-    --border,
-    light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%))
-  );
-
-  margin: 0;
-  padding: 5px;
-  color: var(--foreground);
-  background: transparent !important;
-  font-family: var(--font-sans) !important;
-  font-size: var(--font-size-normal);
-  font-weight: var(--font-weight-normal);
-  line-height: var(--line-height-normal);
-}
-
-a {
-  color: color-mix(in srgb, var(--viz-accent) 80%, var(--viz-text) 20%);
-  cursor: pointer;
-  font-weight: var(--font-weight-medium, 500);
-  text-decoration: none;
-  text-underline-offset: 2px;
-}
-
-a:is(:hover, :focus-visible) {
-  text-decoration-line: underline;
-  text-decoration-style: dashed;
-  text-decoration-thickness: 0.5px;
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-p {
-  margin-block: 0;
-}
-
-h1 {
-  font-size: var(--font-size-h1);
-  font-weight: var(--font-weight-medium);
-  line-height: 1.25;
-}
-
-h2 {
-  font-size: var(--font-size-h2);
-  font-weight: var(--font-weight-medium);
-  line-height: 1.25;
-}
-
-h3,
-h4,
-h5,
-h6 {
-  font-size: var(--font-size-h3);
-  font-weight: var(--font-weight-medium);
-  line-height: 1.3;
-}
-
-b,
-strong,
-th {
-  font-weight: var(--font-weight-medium);
-}
-
-code:not(pre code) {
-  display: inline;
-  padding: 1px 6px;
-  border-radius: var(--radius-sm);
-  corner-shape: superellipse(1.5);
-  background: var(--muted);
-  font-family: var(--font-mono);
-  font-size: 0.92em;
-  overflow-wrap: anywhere;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-  word-break: break-word;
-}
-
-.table-responsive {
-  width: 100%;
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  color: var(--foreground);
-  font: inherit;
-  text-align: start;
-}
-
-.table :is(th, td) {
-  padding-block: 10px;
-  padding-inline: 0 24px;
-  overflow-wrap: anywhere;
-  border-bottom: 1px solid var(--border);
-  text-align: start;
-  vertical-align: top;
-}
-
-.table-responsive > .table :is(th, td) {
-  overflow-wrap: break-word;
-}
-
-.table :is(th, td):last-child {
-  padding-inline-end: 0;
-}
-
-.table :is(caption, thead th) {
-  font-weight: 600;
-}
-
-.table thead th {
-  padding-block: 8px;
-  border-bottom-color: color-mix(in srgb, var(--foreground) 16%, transparent);
-}
-
-.table tbody tr:last-child :is(th, td) {
-  border-bottom: 0;
-}
-
-.table.table-sm :is(th, td) {
-  padding-block: 6px;
-}
-
-.table.table-sm :is(th, td):not(:last-child) {
-  padding-inline-end: 16px;
-}
-
-.table :is(.text-end, [align="right"]) {
-  text-align: end;
-  font-variant-numeric: tabular-nums;
-}
-
-.table :is(.text-center, [align="center"]) {
-  text-align: center;
-}
-
-.table .text-nowrap {
-  white-space: nowrap;
-}
-
-#widget {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-  padding: 0;
-  background: transparent !important;
-}
-
-.card {
-  min-width: 0;
-  padding: 12px;
-  overflow: hidden;
-  overflow-wrap: break-word;
-  border-radius: var(--radius-2xl);
-  corner-shape: superellipse(1.5);
-  color: var(--card-foreground);
-  background: var(--card);
-}
-
-#widget > :not(.card, .progress) {
-  width: 100% !important;
-  max-width: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-.tooltip {
-  position: fixed;
-  z-index: 50;
-  top: 0;
-  left: 0;
-  width: max-content;
-  max-width: min(
-    20rem,
-    var(--tooltip-available-width, calc(100vw - 10px)),
-    calc(100vw - 10px)
-  );
-  max-height: min(
-    var(--tooltip-available-height, calc(100vh - 10px)),
-    calc(100vh - 10px)
-  );
-  padding: 4px 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  corner-shape: superellipse(1.5);
-  color: var(--popover-foreground);
-  background: var(--popover);
-  box-shadow: none;
-  font-size: var(--font-size-tooltip);
-  line-height: var(--line-height-tooltip);
-  overflow-wrap: break-word;
-  white-space: normal;
-  pointer-events: none;
-  user-select: none;
-}
-
-.viz-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(max(180px, 24%), 1fr));
-  gap: 10px;
-}
-
-.viz-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.viz-stat-value {
-  font-size: var(--font-size-h2);
-  font-weight: var(--font-weight-medium);
-  line-height: 1.25;
-}
-
-.viz-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-}
-
-.progress {
-  display: flex;
-  height: 6px;
-  margin-block: calc((var(--line-height-normal, 1.5em) - 6px) / 2);
-  overflow: hidden;
-  border: 0;
-  border-radius: var(--radius-full);
-  background: var(--muted);
-}
-
-.progress-bar {
-  height: 100%;
-  flex-shrink: 0;
-  border: 0;
-  background: var(--viz-series-1);
-}
-
-.viz-badge {
-  padding: 3px 8px;
-  border-radius: var(--radius-full);
-  color: var(--accent-foreground);
-  background: var(--accent);
-  font-weight: var(--font-weight-medium);
-}
-
-small,
-.text-small,
-.viz-badge {
-  font-size: var(--font-size-small);
-  line-height: var(--line-height-small);
-}
-
-.text-muted {
-  color: var(--muted-foreground);
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.viz-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-
-.viz-controls > .form-label {
-  display: grid;
-  min-width: min(100%, 260px);
-  flex: 1 1 280px;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: 2px 12px;
-  margin-bottom: 0;
-}
-
-.viz-controls > .form-label > :is(.form-control, .form-range, .form-select) {
-  grid-column: 1 / -1;
-}
-
-.btn,
-.form-check-input,
-.form-control,
-.form-range,
-.form-select {
-  font: inherit;
-}
-
-.btn {
-  appearance: button;
-  display: inline-flex;
-  inline-size: fit-content;
-  max-inline-size: 100%;
-  min-height: 28px;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  margin: 0;
-  padding: 0 8px;
-  -webkit-app-region: no-drag;
-  border: 1px solid var(--input);
-  border-radius: var(--radius-lg);
-  corner-shape: superellipse(1.5);
-  color: var(--secondary-foreground);
-  background: var(--secondary);
-  cursor: var(--cursor-interaction, pointer);
-  text-align: center;
-  text-decoration: none;
-  white-space: nowrap;
-  user-select: none;
-  -webkit-font-smoothing: antialiased;
-}
-
-.btn:is(.btn-block, .viz-tile) {
-  inline-size: 100%;
-}
-
-.btn.viz-tile {
-  min-width: 0;
-  overflow-wrap: anywhere;
-  white-space: normal;
-}
-
-a.btn {
-  cursor: pointer;
-  text-decoration: none;
-}
-
-.btn:not(:disabled):hover {
-  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
-}
-
-.btn-primary {
-  border-color: transparent;
-  color: var(--primary-foreground);
-  background: var(--foreground);
-  background-clip: padding-box;
-}
-
-.btn-primary .text-muted {
-  color: color-mix(in srgb, var(--primary-foreground) 50%, transparent);
-}
-
-.btn-primary:not(:disabled):hover {
-  background: color-mix(in srgb, var(--foreground) 80%, transparent);
-  background-clip: padding-box;
-}
-
-.btn-ghost {
-  border-color: transparent;
-  color: var(--muted-foreground);
-  background: transparent;
-}
-
-.btn-ghost:not(:disabled):hover {
-  color: var(--foreground);
-  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
-}
-
-.btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.4;
-}
-
-[data-lucide] {
-  stroke-width: 1.6;
-}
-
-.form-label {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--foreground);
-}
-
-.form-control {
-  display: block;
-  width: 100%;
-  min-height: 28px;
-  padding: 0 8px;
-  outline: none;
-  border: 1px solid var(--input);
-  border-radius: var(--radius-lg);
-  corner-shape: superellipse(1.5);
-  color: var(--foreground);
-  background: var(--secondary);
-}
-
-.form-control::placeholder {
-  color: var(--muted-foreground);
-}
-
-.form-control[type="file"] {
-  padding: 0;
-  overflow: hidden;
-  cursor: var(--cursor-interaction, pointer);
-}
-
-.form-control[type="file"]::file-selector-button {
-  min-height: 26px;
-  margin-right: 8px;
-  padding: 0 8px;
-  border: 0;
-  border-right: 1px solid var(--input);
-  color: var(--secondary-foreground);
-  background: var(--secondary);
-  cursor: inherit;
-  font: inherit;
-}
-
-.form-control[type="file"]:not(:disabled):hover::file-selector-button {
-  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
-}
-
-.form-control-color[type="color"] {
-  width: 40px;
-  height: 28px;
-  padding: 3px;
-  cursor: var(--cursor-interaction, pointer);
-}
-
-.form-control-color[type="color"]::-webkit-color-swatch-wrapper {
-  padding: 0;
-}
-
-.form-control-color[type="color"]::-webkit-color-swatch {
-  border: 0;
-  border-radius: calc(var(--radius-lg) - 4px);
-  corner-shape: superellipse(1.5);
-}
-
-textarea.form-control {
-  height: auto;
-  min-height: 72px;
-  padding: 8px 10px;
-  resize: vertical;
-}
-
-.form-control:focus-visible {
-  border-color: var(--ring);
-  box-shadow: inset 0 0 0 1px var(--ring);
-}
-
-.form-control:disabled,
-.form-select:disabled {
-  cursor: not-allowed;
-  opacity: 0.4;
-}
-
-.form-select {
-  appearance: none;
-  display: block;
-  width: 100%;
-  min-height: 28px;
-  margin: 0;
-  padding: 0 32px 0 8px;
-  outline: none;
-  border: 1px solid var(--input);
-  border-radius: var(--radius-lg);
-  corner-shape: superellipse(1.5);
-  color: var(--foreground);
-  background-color: var(--secondary);
-  background-image:
-    linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%),
-    linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%);
-  background-position:
-    calc(100% - 14px) 50%,
-    calc(100% - 10px) 50%;
-  background-repeat: no-repeat;
-  background-size: 4px 4px;
-  cursor: var(--cursor-interaction, default);
-}
-
-.form-select:not(:disabled):hover {
-  background-color: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
-}
-
-.form-select:focus-visible {
-  border-color: var(--ring);
-  box-shadow: inset 0 0 0 1px var(--ring);
-}
-
-.form-check {
-  display: flex;
-  min-height: 20px;
-  align-items: center;
-  gap: 6px;
-}
-
-.form-check-input {
-  appearance: none;
-  width: 14px;
-  height: 14px;
-  flex: 0 0 auto;
-  margin: 0;
-  border: 1px solid var(--input);
-  color: var(--primary-foreground);
-  background-color: transparent;
-  cursor: var(--cursor-interaction, default);
-  transition:
-    background-color 150ms,
-    border-color 150ms,
-    box-shadow 150ms;
-}
-
-.form-check:not(.form-switch) .form-check-input[type="checkbox"] {
-  border-color: var(--input);
-  border-radius: var(--radius-sm);
-  corner-shape: superellipse(1.5);
-  background-color: var(--secondary);
-  box-shadow: var(--shadow-sm);
-}
-
-.form-check:not(.form-switch)
-  .form-check-input:not(:disabled):not(:checked):hover {
-  background-color: var(--card);
-}
-
-.form-check:not(.form-switch) .form-check-input[type="checkbox"]:checked {
-  border-color: var(--primary);
-  background-color: var(--primary);
-}
-
-.form-check:not(.form-switch)
-  .form-check-input[type="checkbox"]:checked::before {
-  display: block;
-  width: 100%;
-  height: 100%;
-  background: var(--primary-foreground);
-  content: "";
-  mask: var(--checkmark-image) center / 12px 12px no-repeat;
-}
-
-.form-check-input[type="radio"] {
-  width: 14px;
-  height: 14px;
-  border-radius: var(--radius-full);
-}
-
-.form-check-input[type="radio"]:checked {
-  border: 2px solid var(--primary);
-  background:
-    radial-gradient(circle, var(--primary-foreground) 0 2.5px, transparent 3px),
-    var(--primary);
-}
-
-.form-check:not(.form-switch) .form-check-input:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
-
-.form-check:not(.form-switch) .form-check-input:disabled {
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.form-check:not(.form-switch) .form-check-input:disabled + .form-check-label {
-  cursor: not-allowed;
-}
-
-.form-switch .form-check-input:disabled,
-.form-switch .form-check-input:disabled + .form-check-label {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.form-check-label {
-  color: var(--foreground);
-  cursor: var(--cursor-interaction, default);
-}
-
-.form-switch .form-check-input {
-  position: relative;
-  width: 32px;
-  height: 20px;
-  border: 0;
-  border-radius: var(--radius-full);
-  background: var(--muted);
-  box-shadow: none;
-  transition: background-color 200ms cubic-bezier(0, 0, 0.2, 1);
-}
-
-.form-switch .form-check-input::before {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 16px;
-  height: 16px;
-  box-sizing: border-box;
-  border: 1px solid light-dark(var(--primary-foreground), var(--foreground));
-  border-radius: var(--radius-full);
-  background: light-dark(var(--primary-foreground), var(--foreground));
-  box-shadow: var(--shadow-sm);
-  content: "";
-  transform: translate(2px, -50%);
-  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
-}
-
-.form-switch .form-check-input:checked {
-  background: var(--primary);
-}
-
-.form-switch .form-check-input:checked::before {
-  transform: translate(14px, -50%);
-}
-
-.form-switch .form-check-input:focus-visible {
-  box-shadow: 0 0 0 2px var(--ring);
-}
-
-.form-range {
-  appearance: none;
-  display: block;
-  width: 100%;
-  height: 28px;
-  flex: 1;
-  margin: 0;
-  padding: 0;
-  outline: none;
-  border: 0;
-  accent-color: var(--primary);
-  background: linear-gradient(
-      color-mix(in srgb, var(--foreground) 7%, transparent),
-      color-mix(in srgb, var(--foreground) 7%, transparent)
-    )
-    center / 100% 2px no-repeat;
-}
-
-.form-range::-webkit-slider-runnable-track {
-  height: 28px;
-  background: transparent;
-}
-
-.form-range::-webkit-slider-thumb {
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  margin-top: 4px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  background: light-dark(var(--primary-foreground), var(--foreground));
-}
-
-.form-range:focus-visible::-webkit-slider-thumb {
-  border-color: var(--ring);
-  box-shadow: inset 0 0 0 1px var(--ring);
-}
-
-.form-range::-moz-range-track {
-  height: 28px;
-  background: transparent;
-}
-
-.form-range::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  background: light-dark(var(--primary-foreground), var(--foreground));
-}
-
-.form-range:focus-visible::-moz-range-thumb {
-  border-color: var(--ring);
-  box-shadow: inset 0 0 0 1px var(--ring);
-}
-
-.form-range:disabled {
-  cursor: not-allowed;
-  opacity: 0.4;
-}
-
-.btn:not(.btn-primary, .viz-tile):is(
-  [aria-pressed="true"],
-  [aria-selected="true"],
-  .is-selected
-) {
-  border-color: var(--primary);
-  color: var(--primary-foreground);
-  background: var(--primary);
-}
-
-.btn.viz-tile:is([aria-pressed="true"], [aria-selected="true"], .is-selected) {
-  border-color: var(--primary);
-  box-shadow: inset 0 0 0 1px var(--primary);
-}
-
-.btn:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
-
-svg {
-  display: block;
-  max-width: 100%;
-  height: auto;
-}
-
-#widget > svg {
-  width: 100%;
-}
-
-/* Model-authored chart rules can otherwise stretch icons after these styles load. */
-svg.lucide {
-  display: block;
-  width: 16px !important;
-  height: 16px !important;
-  flex: none;
-  margin: 0 !important;
-  stroke-width: 1.6;
-}
-
-.text-warning,
-.text-destructive {
-  color: var(--destructive);
-}
-
-html>body{padding:0}</style>
+<meta name="color-scheme" content="light dark">
+<title>Protein Quantification Calculator</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --ink: #1d1d1f;
+    --muted: #6e6e73;
+    --line: rgba(0, 0, 0, 0.08);
+    --fill: #f5f5f7;
+    --fill-strong: #e8e8ed;
+    --accent: #0071e3;
+    --accent-hover: #0077ed;
+    --accent-soft: rgba(0, 113, 227, 0.1);
+    --bad: #d70015;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Segoe UI", sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --card: #1c1c1e;
+      --ink: #f5f5f7;
+      --muted: #98989d;
+      --line: rgba(255, 255, 255, 0.12);
+      --fill: #2c2c2e;
+      --fill-strong: #3a3a3c;
+      --accent: #2997ff;
+      --accent-hover: #4aa8ff;
+      --accent-soft: rgba(41, 151, 255, 0.16);
+      --bad: #ff453a;
+      --shadow: none;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .back {
+    display: block;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 20px 24px 0;
+    color: var(--accent);
+    font-size: 13px;
+    text-decoration: none;
+  }
+  .back:hover { text-decoration: underline; }
+
+  #protein-calculator {
+    display: grid;
+    gap: 16px;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 12px 24px 40px;
+  }
+
+  /* ---------- Header ---------- */
+  .app-head { padding: 8px 4px 12px; }
+  .app-title {
+    margin: 0;
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+  }
+  .app-lead {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 17px;
+    letter-spacing: -0.01em;
+  }
+
+  /* ---------- Layout ---------- */
+  .two-col {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
+  }
+  .result-cols { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); }
+
+  .card {
+    min-width: 0;
+    padding: 20px 22px;
+    border-radius: 20px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+  .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  h2 {
+    margin: 0 0 14px;
+    font-size: 19px;
+    font-weight: 650;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+  .card-head h2 { margin: 0; }
+
+  /* ---------- Form controls ---------- */
+  .field-label {
+    display: block;
+    margin: 0 0 6px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  input[type="text"],
+  textarea {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: var(--fill);
+    color: var(--ink);
+    font: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+  input[type="text"] { padding: 6px 10px; }
+  textarea {
+    min-height: 128px;
+    padding: 10px 12px;
+    resize: vertical;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.5;
+    white-space: pre;
+  }
+  input[type="text"]:hover,
+  textarea:hover { background: var(--fill-strong); }
+  input[type="text"]:focus,
+  textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--card);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .textarea-pair {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+  }
+  .hint {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .status {
+    min-height: 1.45em;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .btn {
+    padding: 6px 16px;
+    border: 0;
+    border-radius: 980px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .btn:hover { background: var(--fill-strong); }
+  .btn:active { opacity: 0.7; }
+  .btn:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 1px; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.primary:hover { background: var(--accent-hover); }
+  .btn.text { background: transparent; }
+  .btn.text:hover { background: var(--accent-soft); }
+
+  /* ---------- Tables ---------- */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  th, td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--line);
+    text-align: right;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  th {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  th:first-child, td:first-child { padding-left: 0; text-align: left; }
+  th:last-child, td:last-child { padding-right: 0; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td input[type="text"] { text-align: right; }
+  td input[type="text"].name { text-align: left; }
+  .std-table td input[type="text"] { max-width: 96px; }
+  .sample-table td input[type="text"] { max-width: 84px; }
+  .sample-table td input[type="text"].name { max-width: 180px; }
+  .sample-table th:nth-child(2), .sample-table td:nth-child(2) { text-align: left; }
+  tr.out td, tr.out input { color: var(--bad); font-weight: 600; }
+
+  /* ---------- Metrics ---------- */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .metric span {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .metric strong {
+    display: block;
+    margin-top: 2px;
+    font-size: 24px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Chart ---------- */
+  .chart-card { display: flex; flex-direction: column; }
+  svg#chart { display: block; width: 100%; height: auto; }
+  text.axis, .axis-title { fill: var(--muted); font-size: 11px; }
+  .point-label { fill: var(--ink); font-size: 12px; font-weight: 600; paint-order: stroke; stroke: var(--card); stroke-width: 3px; stroke-linejoin: round; }
+  .grid { stroke: var(--line); shape-rendering: crispEdges; }
+  .frame { stroke: var(--line); shape-rendering: crispEdges; }
+  .fit-line { stroke: var(--accent); stroke-width: 2; stroke-linecap: round; }
+  .std-point { fill: var(--accent); }
+  .sample-point { fill: var(--ink); stroke: var(--card); stroke-width: 1.5; }
+  .sample-point.out { fill: var(--bad); }
+  .calibration-band { fill: var(--accent); opacity: 0.07; }
+  .leader-line { stroke: var(--muted); stroke-width: 0.75; opacity: 0.6; }
+  .legend-text { fill: var(--muted); font-size: 11px; }
+
+  /* ---------- Preparation ---------- */
+  .prep-controls {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .copy-group { display: flex; align-items: center; gap: 10px; }
+  .copy-group .status { min-height: 0; }
+
+  /* ---------- Footer ---------- */
+  .app-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 4px 0;
+  }
+  .credit { color: var(--muted); font-size: 12px; }
+  .app-foot .actions { margin: 0; }
+
+  /* ---------- Changelog ---------- */
+  .changelog { padding: 0 4px; color: var(--muted); font-size: 12px; }
+  .changelog summary { display: inline-block; cursor: pointer; list-style: none; user-select: none; }
+  .changelog summary::-webkit-details-marker { display: none; }
+  .changelog summary::before { content: "\25B8\00a0"; }
+  .changelog[open] summary::before { content: "\25BE\00a0"; }
+  .changelog summary:hover { color: var(--ink); }
+  .changelog ul { margin: 6px 0 0; padding: 0; list-style: none; }
+  .changelog li { display: flex; gap: 12px; margin-top: 4px; }
+  .changelog .ver { flex: 0 0 32px; font-variant-numeric: tabular-nums; }
+  .changelog .date { flex: 0 0 76px; font-variant-numeric: tabular-nums; }
+
+  @media (max-width: 760px) {
+    #protein-calculator { padding: 8px 16px 32px; }
+    .back { padding: 16px 20px 0; }
+    .app-title { font-size: 28px; }
+    .two-col, .result-cols, .textarea-pair, .prep-controls { grid-template-columns: 1fr; }
+    .card { padding: 18px; }
+  }
+
+  /* ---------- Print: A4 portrait, one page ---------- */
+  @page { size: A4 portrait; margin: 10mm; }
+  @media print {
+    :root {
+      --bg: #fff; --card: #fff; --ink: #1d1d1f; --muted: #6e6e73;
+      --line: rgba(0, 0, 0, 0.14); --fill: transparent; --fill-strong: transparent;
+      --accent: #0071e3; --bad: #d70015; --shadow: none;
+    }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    html, body { background: #fff; }
+    #protein-calculator { --ps: 1; }
+    body { font-size: calc(12px * var(--ps)); line-height: 1.4; }
+    .back, .input-section, .actions, .copy-group, .status, .app-lead, .app-foot .actions, .changelog { display: none !important; }
+    #protein-calculator { max-width: none; gap: calc(10px * var(--ps)); padding: 0 2px 0 1px; }
+    .app-head { padding: 0 0 2px; }
+    .app-title { font-size: calc(22px * var(--ps)); }
+    .two-col, .result-cols { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: calc(8px * var(--ps)); }
+    .card {
+      padding: calc(10px * var(--ps)) calc(12px * var(--ps));
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      break-inside: avoid;
+    }
+    .card-head { margin-bottom: calc(6px * var(--ps)); }
+    h2 { margin-bottom: calc(6px * var(--ps)); font-size: calc(14px * var(--ps)); }
+    table { font-size: calc(12px * var(--ps)); }
+    th, td { padding: calc(4px * var(--ps)) calc(6px * var(--ps)); }
+    th { font-size: calc(10.5px * var(--ps)); }
+    input[type="text"] {
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+      box-shadow: none;
+      color: inherit;
+      font: inherit;
+    }
+    input[type="checkbox"] { width: calc(11px * var(--ps)); height: calc(11px * var(--ps)); }
+    .metrics { gap: 8px; margin-bottom: calc(4px * var(--ps)); }
+    .metric span { font-size: calc(10px * var(--ps)); }
+    .metric strong { font-size: calc(18px * var(--ps)); }
+    svg#chart { width: calc(100% * var(--ps)); margin: 0 auto; }
+    .prep-controls { display: flex; gap: 20px; margin-bottom: calc(6px * var(--ps)); }
+    .prep-controls .field-label { display: flex; align-items: baseline; gap: 6px; margin: 0; font-size: calc(12px * var(--ps)); }
+    .prep-controls input[type="text"] { width: 4em; font-weight: 600; }
+    .app-foot { padding: 0; justify-content: flex-end; }
+    .credit { font-size: calc(9px * var(--ps)); }
+  }
+</style>
 </head>
 <body>
-<a href="../../" style="display:inline-block;margin:12px 0 0 14px;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;font-size:14px;text-decoration:none;color:light-dark(#0969da,#6cb6ff);">&larr; Web Tools</a>
+<a class="back" href="../../">&lsaquo; Web Tools</a>
 <div id="protein-calculator">
-  <style>
-    #protein-calculator {
-      --ink: light-dark(#0F2B45, #F5F7FA);
-      --muted: light-dark(#607086, #AAB7C4);
-      --line: light-dark(#C8D3DF, #2D4660);
-      --page: light-dark(#F5F7FA, #081A2B);
-      --panel: light-dark(#FFFFFF, #0F2B45);
-      --soft: light-dark(#EEF3F8, #12324F);
-      --head: light-dark(#1B3A5E, #0F2B45);
-      --head-text: light-dark(#FFFFFF, #F5F7FA);
-      --accent: light-dark(#4A90E2, #6EA8EA);
-      --accent-2: light-dark(#2E5C8A, #91B9E8);
-      --bad: light-dark(#8f1d2c, #d66a78);
-      color: var(--ink);
-      background: var(--page);
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      display: grid;
-      gap: 14px;
-      width: min(100%, 1440px);
-      max-width: none;
-      padding: 14px;
-    }
-    #protein-calculator * {
-      box-sizing: border-box;
-    }
-    #protein-calculator .app-title {
-      margin: 0;
-      padding: 2px 0 4px;
-      color: var(--head);
-      font-size: 26px;
-      font-weight: 750;
-      letter-spacing: 0;
-    }
-    #protein-calculator .input-grid {
-      display: grid;
-      grid-template-columns: minmax(320px, 0.95fr) minmax(320px, 1.05fr);
-      gap: 10px;
-      align-items: stretch;
-    }
-    #protein-calculator .result-grid {
-      display: grid;
-      grid-template-columns: minmax(320px, 0.95fr) minmax(320px, 1.05fr);
-      gap: 10px;
-      align-items: stretch;
-    }
-    #protein-calculator .result-grid > .panel {
-      min-width: 0;
-      height: 100%;
-    }
-    #protein-calculator .panel {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      padding: 12px;
-    }
-    #protein-calculator h3 {
-      margin: 0 0 10px;
-      color: var(--head);
-      font-size: 16px;
-      letter-spacing: 0;
-    }
-    #protein-calculator .panel-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-    #protein-calculator .panel-head h3 {
-      margin: 0;
-    }
-    #protein-calculator table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-      font-size: 13px;
-    }
-    #protein-calculator th,
-    #protein-calculator td {
-      border-bottom: 1px solid var(--line);
-      padding: 6px 7px;
-      text-align: left;
-      white-space: nowrap;
-    }
-    #protein-calculator th {
-      background: var(--head);
-      color: var(--head-text);
-      font-weight: 650;
-    }
-    #protein-calculator input,
-    #protein-calculator textarea {
-      width: 100%;
-      min-width: 0;
-      border: 1px solid var(--line);
-      border-radius: 4px;
-      background: light-dark(#ffffff, #16232b);
-      color: var(--ink);
-      padding: 5px 6px;
-      font: inherit;
-    }
-    #protein-calculator .std-table th,
-    #protein-calculator .std-table td {
-      padding: 5px 6px;
-    }
-    #protein-calculator .std-table input[type="text"] {
-      max-width: 78px;
-      padding: 4px 6px;
-    }
-    #protein-calculator input[type="checkbox"] {
-      inline-size: 16px;
-      block-size: 16px;
-      accent-color: var(--accent);
-    }
-    #protein-calculator textarea {
-      min-height: 112px;
-      resize: vertical;
-      line-height: 1.35;
-      white-space: pre;
-    }
-    #protein-calculator .std-input-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      align-items: stretch;
-    }
-    #protein-calculator .input-label {
-      display: block;
-      margin: 0 0 5px;
-      color: var(--head);
-      font-size: 12px;
-      font-weight: 700;
-    }
-    #protein-calculator .actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-    #protein-calculator button {
-      border: 1px solid var(--head);
-      background: var(--head);
-      color: var(--head-text);
-      border-radius: 4px;
-      padding: 6px 9px;
-      font: inherit;
-      cursor: pointer;
-    }
-    #protein-calculator button:hover {
-      background: var(--accent-2);
-      border-color: var(--accent-2);
-    }
-    #protein-calculator .metrics {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(86px, 1fr));
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    #protein-calculator .metric {
-      min-height: 58px;
-      border: 1px solid var(--line);
-      border-radius: 5px;
-      background: var(--soft);
-      padding: 8px;
-    }
-    #protein-calculator .metric span {
-      display: block;
-      color: var(--muted);
-      font-size: 12px;
-    }
-    #protein-calculator .metric strong {
-      display: block;
-      margin-top: 3px;
-      color: var(--head);
-      font-size: 15px;
-      font-variant-numeric: tabular-nums;
-    }
-    #protein-calculator svg {
-      display: block;
-      width: 100%;
-      min-height: 350px;
-      overflow: visible;
-    }
-    #protein-calculator .chart-panel {
-      display: grid;
-      grid-template-rows: auto 1fr;
-    }
-    #protein-calculator .chart-panel svg {
-      height: 100%;
-    }
-    #protein-calculator .axis text,
-    #protein-calculator .axis-title,
-    #protein-calculator .point-label {
-      fill: var(--ink);
-      font-size: 12px;
-    }
-    #protein-calculator .grid line,
-    #protein-calculator .frame {
-      stroke: var(--line);
-      shape-rendering: crispEdges;
-    }
-    #protein-calculator .fit-line {
-      stroke: var(--accent-2);
-      stroke-width: 2.2;
-    }
-    #protein-calculator .std-point {
-      fill: var(--accent);
-    }
-    #protein-calculator .sample-point {
-      fill: var(--accent-2);
-      stroke: var(--panel);
-      stroke-width: 1.5;
-    }
-    #protein-calculator .sample-point.out {
-      fill: var(--bad);
-    }
-    #protein-calculator .calibration-band {
-      fill: var(--accent);
-      opacity: 0.08;
-    }
-    #protein-calculator .leader-line {
-      stroke: var(--muted);
-      stroke-width: 1;
-    }
-    #protein-calculator .legend-text {
-      fill: var(--muted);
-      font-size: 11px;
-    }
-    #protein-calculator tr.out input,
-    #protein-calculator tr.out td {
-      color: var(--bad);
-      font-weight: 650;
-    }
-    #protein-calculator .status,
-    #protein-calculator .credit,
-    #protein-calculator .hint {
-      color: var(--muted);
-      font-size: 11px;
-    }
-    #protein-calculator .hint {
-      margin-top: 6px;
-    }
-    #protein-calculator .footer-actions {
-      justify-content: flex-end;
-    }
-    #protein-calculator .copy-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    #protein-calculator .copy-group button {
-      padding: 5px 8px;
-      font-size: 12px;
-    }
-    #protein-calculator .prep-panel {
-      border: 2px solid var(--head);
-      background: light-dark(#F8FBFE, #102B45);
-    }
-    #protein-calculator .prep-controls {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(120px, 1fr));
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    #protein-calculator .prep-controls input {
-      margin-top: 5px;
-    }
-    #protein-calculator .credit {
-      text-align: right;
-      padding: 0 2px 2px;
-    }
-    @media print {
-      #protein-calculator,
-      #protein-calculator * {
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-      #protein-calculator .actions,
-      #protein-calculator .copy-group,
-      #protein-calculator #std-paste,
-      #protein-calculator #std-conc-paste,
-      #protein-calculator #sample-paste,
-      #protein-calculator .status {
-        display: none;
-      }
-      #protein-calculator {
-        max-width: none;
-        gap: 10px;
-      }
-      #protein-calculator .panel {
-        break-inside: avoid;
-      }
-      #protein-calculator th {
-        background: var(--head) !important;
-        color: var(--head-text) !important;
-      }
-    }
-    @media (max-width: 760px) {
-      #protein-calculator .input-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
-  <h1 class="app-title">Protein Quantification Calculator</h1>
-  <div class="input-grid">
-    <div class="panel">
-      <h3>STD raw data</h3>
-      <div class="std-input-grid">
+  <header class="app-head">
+    <h1 class="app-title">Protein Quantification Calculator</h1>
+    <p class="app-lead">Paste absorbance readings to build a standard curve, quantify samples, and plan loading volumes.</p>
+  </header>
+
+  <section class="two-col input-section">
+    <div class="card">
+      <h2>STD raw data</h2>
+      <div class="textarea-pair">
         <div>
-          <label class="input-label" for="std-conc-paste">STD conc (ug/ul)</label>
+          <label class="field-label" for="std-conc-paste">STD conc (ug/ul)</label>
           <textarea id="std-conc-paste" aria-label="standard concentrations"></textarea>
         </div>
         <div>
-          <label class="input-label" for="std-paste">Abs</label>
+          <label class="field-label" for="std-paste">Abs</label>
           <textarea id="std-paste" aria-label="standard absorbance values"></textarea>
         </div>
       </div>
-      <div class="hint">STD conc is entered vertically. If blank, 0, 0.031, 0.063, 0.125, 0.25, 0.5, 1 are used. Abs rows are STD points; columns are replicates.</div>
+      <p class="hint">Each Abs row is one STD point, in the order entered; replicates go across columns (1 column &rarr; n = 1, 2 columns &rarr; n = 2). Enter STD conc vertically in the same order; if blank, 0, 0.031, 0.063, 0.125, 0.25, 0.5, 1 are used.</p>
       <div class="actions">
-        <button type="button" id="apply-std">Apply STD</button>
-        <button type="button" id="example-std">Example</button>
-        <button type="button" id="clear-std">Clear</button>
+        <button type="button" class="btn primary" id="apply-std">Apply STD</button>
+        <button type="button" class="btn text" id="example-std">Example</button>
+        <button type="button" class="btn text" id="clear-std">Clear</button>
       </div>
       <div class="status" id="std-status"></div>
     </div>
-    <div class="panel">
-      <h3>Sample raw data</h3>
+    <div class="card">
+      <h2>Sample raw data</h2>
+      <label class="field-label" for="sample-paste">Abs</label>
       <textarea id="sample-paste" aria-label="sample raw values"></textarea>
-      <div class="hint">Raw values: each row is one sample; columns are replicates.</div>
+      <p class="hint">Each row is one sample, named Sample 1, 2, &hellip; in the order entered. Replicates of the same sample go across columns: 1 column &rarr; n = 1, 2 columns &rarr; n = 2.</p>
       <div class="actions">
-        <button type="button" id="apply-sample">Apply Sample</button>
-        <button type="button" id="example-sample">Example</button>
-        <button type="button" id="clear-sample">Clear</button>
+        <button type="button" class="btn primary" id="apply-sample">Apply Sample</button>
+        <button type="button" class="btn text" id="example-sample">Example</button>
+        <button type="button" class="btn text" id="clear-sample">Clear</button>
       </div>
       <div class="status" id="sample-status"></div>
     </div>
-  </div>
-  <div class="result-grid">
-    <div class="panel">
-      <h3>Standard Curve</h3>
-      <table class="std-table" aria-label="standard curve table">
-        <thead>
-          <tr>
-            <th style="width: 38px">Use</th>
-            <th style="width: 98px">conc (ug/ul)</th>
-            <th style="width: 82px">raw mean</th>
-            <th style="width: 34px">n</th>
-          </tr>
-        </thead>
-        <tbody id="std-body"></tbody>
-      </table>
+  </section>
+
+  <section class="two-col result-cols">
+    <div class="card">
+      <h2>Standard Curve</h2>
+      <div class="table-wrap">
+        <table class="std-table" aria-label="standard curve table">
+          <thead>
+            <tr>
+              <th style="width: 44px">Use</th>
+              <th>conc (ug/ul)</th>
+              <th>raw mean</th>
+              <th style="width: 32px">n</th>
+            </tr>
+          </thead>
+          <tbody id="std-body"></tbody>
+        </table>
+      </div>
     </div>
-    <div class="panel chart-panel">
+    <div class="card chart-card">
       <div class="metrics">
         <div class="metric"><span>Slope</span><strong id="slope">-</strong></div>
         <div class="metric"><span>Intercept</span><strong id="intercept">-</strong></div>
         <div class="metric"><span>R²</span><strong id="r2">-</strong></div>
       </div>
-      <svg id="chart" role="img" aria-label="standard curve"></svg>
+      <svg id="chart" viewBox="0 0 480 300" role="img" aria-label="standard curve"></svg>
     </div>
-  </div>
-  <div class="panel">
-    <h3>Sample Quantification</h3>
-    <table aria-label="sample quantification table">
-      <thead>
-        <tr>
-          <th style="width: 160px" rowspan="2">sample</th>
-          <th rowspan="2">raw mean</th>
-          <th rowspan="2">n</th>
-          <th rowspan="2">dilution</th>
-          <th colspan="2">concentration (ug/ul)</th>
-        </tr>
-        <tr>
-          <th>measured</th>
-          <th>final</th>
-        </tr>
-      </thead>
-      <tbody id="sample-body"></tbody>
-    </table>
-  </div>
-  <div class="panel prep-panel">
-    <div class="panel-head">
-      <h3>Preparation Volume Calculator</h3>
+  </section>
+
+  <section class="card">
+    <h2>Sample Quantification</h2>
+    <div class="table-wrap">
+      <table class="sample-table" aria-label="sample quantification table">
+        <thead>
+          <tr>
+            <th style="width: 44px">Plot</th>
+            <th>sample</th>
+            <th>raw mean</th>
+            <th>n</th>
+            <th>measured (ug/ul)</th>
+            <th>dilution</th>
+            <th>final (ug/ul)</th>
+          </tr>
+        </thead>
+        <tbody id="sample-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Preparation Volume Calculator</h2>
       <div class="copy-group">
-        <button type="button" id="copy-prep">Copy</button>
         <span class="status" id="copy-status"></span>
+        <button type="button" class="btn" id="copy-prep">Copy</button>
       </div>
     </div>
     <div class="prep-controls">
-      <label class="input-label" for="target-protein">Required protein (ug)
+      <label class="field-label" for="target-protein">Required protein (ug)
         <input id="target-protein" type="text" inputmode="decimal" value="5">
       </label>
-      <label class="input-label" for="target-total">total (ul)
+      <label class="field-label" for="target-total">total (ul)
         <input id="target-total" type="text" inputmode="decimal" value="20">
       </label>
-      <label class="input-label" for="prep-count">Number of samples
+      <label class="field-label" for="prep-count">Number of samples
         <input id="prep-count" type="text" inputmode="decimal" value="3">
       </label>
     </div>
-    <table aria-label="sample preparation volume table">
-      <thead>
-        <tr>
-          <th style="width: 160px">sample</th>
-          <th>conc (ug/ul)</th>
-          <th>sample vol (ul)</th>
-          <th>buffer (ul)</th>
-          <th>sample x n (ul)</th>
-          <th>buffer x n (ul)</th>
-        </tr>
-      </thead>
-      <tbody id="prep-body"></tbody>
-    </table>
-  </div>
-  <div class="actions footer-actions">
-    <button type="button" id="print-page">Print</button>
-  </div>
-  <div class="credit">Created with Codex | 2026/8/21 kamel</div>
+    <div class="table-wrap">
+      <table aria-label="sample preparation volume table">
+        <thead>
+          <tr>
+            <th>sample</th>
+            <th>conc (ug/ul)</th>
+            <th>sample vol (ul)</th>
+            <th>buffer (ul)</th>
+            <th>sample x n (ul)</th>
+            <th>buffer x n (ul)</th>
+          </tr>
+        </thead>
+        <tbody id="prep-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="app-foot">
+    <div class="credit">Created with Codex &amp; Claude | kamel</div>
+    <div class="actions">
+      <button type="button" class="btn primary" id="print-page">Print</button>
+    </div>
+  </footer>
+  <details class="changelog">
+    <summary>Changelog</summary>
+    <ul>
+      <li><span class="ver">v1.2</span><span class="date">2026/09/21</span><span>Redesign, one-page A4 print, Plot toggle, input-order naming, YYYYMMDD_protein print title</span></li>
+      <li><span class="ver">v1.1</span><span class="date">2026/08/31</span><span>Added back link to Web Tools</span></li>
+      <li><span class="ver">v1.0</span><span class="date">2026/08/21</span><span>Initial release</span></li>
+    </ul>
+  </details>
   <script>
     (() => {
       const root = document.getElementById("protein-calculator");
@@ -1322,12 +518,13 @@ html>body{padding:0}</style>
       const exampleStdValues = [0.12, 0.13, 0.14, 0.16, 0.21, 0.30, 0.42];
       let standards = defaultConcs.map((conc, i) => ({ use: true, conc, values: [exampleStdValues[i]] }));
       let samples = [
-        { name: "Sample 1", values: [0.23, 0.22], dilution: 1 },
-        { name: "Sample 2", values: [0.15, 0.18], dilution: 1 },
-        { name: "Sample 3", values: [0.24, 0.20], dilution: 1 }
+        { name: "Sample 1", values: [0.23, 0.22], dilution: 1, show: true },
+        { name: "Sample 2", values: [0.15, 0.18], dilution: 1, show: true },
+        { name: "Sample 3", values: [0.24, 0.20], dilution: 1, show: true }
       ];
       const parseNumber = value => {
         const text = String(value ?? "").trim().replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xfee0)).replace(/[，,]/g, "");
+        if (!text) return NaN; // an empty cell is missing data, not 0
         const n = Number(text);
         return Number.isFinite(n) ? n : NaN;
       };
@@ -1390,6 +587,12 @@ html>body{padding:0}</style>
         document.execCommand("copy");
         area.remove();
       };
+      const printScale = () => {
+        const rows = samples.length;
+        const stdRows = Math.max(standards.length, 1);
+        const stdBlock = Math.max(270, 26 * stdRows + 50);
+        return Math.max(0.5, Math.min(1, 1000 / (340 + stdBlock + 52 * rows)));
+      };
       const regression = rows => {
         const pts = rows.map(row => ({ x: row.conc, y: mean(row.values), use: row.use }))
           .filter(d => d.use && Number.isFinite(d.x) && Number.isFinite(d.y));
@@ -1450,9 +653,20 @@ html>body{padding:0}</style>
           const out = fit && samplePoint(row, fit, bounds).out;
           const tr = document.createElement("tr");
           if (out) tr.className = "out";
+          const showTd = document.createElement("td");
+          const show = document.createElement("input");
+          show.type = "checkbox";
+          show.checked = row.show !== false;
+          show.setAttribute("aria-label", `plot ${row.name}`);
+          show.addEventListener("change", () => {
+            row.show = show.checked;
+            update();
+          });
+          showTd.append(show);
           const nameTd = document.createElement("td");
           const name = document.createElement("input");
           name.type = "text";
+          name.className = "name";
           name.value = row.name;
           name.addEventListener("input", () => {
             row.name = name.value;
@@ -1471,7 +685,7 @@ html>body{padding:0}</style>
           measuredTd.textContent = fmt(measured, 5);
           const finalTd = document.createElement("td");
           finalTd.textContent = fmt(finalConc, 5);
-          tr.append(nameTd, rawTd, nTd, dilutionTd, measuredTd, finalTd);
+          tr.append(showTd, nameTd, rawTd, nTd, measuredTd, dilutionTd, finalTd);
           sampleBody.append(tr);
         });
       };
@@ -1504,15 +718,17 @@ html>body{padding:0}</style>
       };
       const drawChart = fit => {
         chart.replaceChildren();
-        const width = chart.clientWidth || 620;
-        const height = chart.clientHeight || 350;
-        chart.setAttribute("viewBox", `0 0 ${width} ${height}`);
-        const m = { top: 18, right: 28, bottom: 54, left: 64 };
+        const width = 480;
+        const height = 300;
+        const m = { top: 18, right: 24, bottom: 50, left: 66 };
         const innerW = width - m.left - m.right;
         const innerH = height - m.top - m.bottom;
         const pts = standards.map(d => ({ x: d.conc, y: mean(d.values), use: d.use })).filter(d => Number.isFinite(d.x) && Number.isFinite(d.y));
         const bounds = calibrationBounds();
-        const samplePts = fit ? samples.map(row => samplePoint(row, fit, bounds)).filter(d => Number.isFinite(d.x) && Number.isFinite(d.y)) : [];
+        const samplePts = fit
+          ? samples.map((row, index) => ({ ...samplePoint(row, fit, bounds), index, show: row.show !== false }))
+              .filter(d => d.show && Number.isFinite(d.x) && Number.isFinite(d.y))
+          : [];
         if (!pts.length) return;
         const allY = [...pts.map(d => d.y), ...samplePts.map(d => d.y)];
         const minX = Number.isFinite(bounds.minX) ? Math.min(0, bounds.minX) : 0;
@@ -1558,9 +774,75 @@ html>body{padding:0}</style>
           make("line", { x1: x(x1), y1: y(fit.slope * x1 + fit.intercept), x2: x(x2), y2: y(fit.slope * x2 + fit.intercept), class: "fit-line" });
         }
         pts.forEach(d => make("circle", { cx: x(d.x), cy: y(d.y), r: 5, class: "std-point", opacity: d.use ? "1" : "0.35" }));
-        const sampleLabels = samplePts.map((d, i) => {
-          const plotX = Math.max(minX, Math.min(maxX, d.x));
-          const sx = x(plotX);
+        // Leader-line labels: try candidate spots (short and upper-left first) and take the one that
+        // crosses no other leader and overlaps no label, point, fit line or legend.
+        const placeLabels = list => {
+          const bounds2 = { l: m.left + 2, r: m.left + innerW - 2, t: m.top + 2, b: m.top + innerH - 2 };
+          const fitSeg = fit ? { x1: x(Math.max(minX, bounds.minX)), y1: y(fit.slope * Math.max(minX, bounds.minX) + fit.intercept), x2: x(Math.min(maxX, bounds.maxX)), y2: y(fit.slope * Math.min(maxX, bounds.maxX) + fit.intercept) } : null;
+          const dots = [...pts.map(d => ({ x: x(d.x), y: y(d.y), r: 6 })), ...list.map(d => ({ x: d.sx, y: d.sy, r: 8 }))];
+          const placed = [{ rect: { x: m.left, y: m.top, w: 215, h: 18 }, seg: null }];
+          const pad = 2;
+          const inRect = (px, py, r, e = 0) => px >= r.x - e && px <= r.x + r.w + e && py >= r.y - e && py <= r.y + r.h + e;
+          const rectsHit = (a, c) => a.x < c.x + c.w + pad && a.x + a.w + pad > c.x && a.y < c.y + c.h + pad && a.y + a.h + pad > c.y;
+          const alongSeg = (g, n = 24) => Array.from({ length: n + 1 }, (_, i) => ({ x: g.x1 + (g.x2 - g.x1) * i / n, y: g.y1 + (g.y2 - g.y1) * i / n }));
+          const segHitsRect = (g, r, e = 0) => alongSeg(g).some(pt => inRect(pt.x, pt.y, r, e));
+          const ccw = (ax, ay, bx, by, cx, cy) => (cy - ay) * (bx - ax) - (by - ay) * (cx - ax);
+          const segsCross = (g, h) => {
+            const d1 = ccw(g.x1, g.y1, g.x2, g.y2, h.x1, h.y1), d2 = ccw(g.x1, g.y1, g.x2, g.y2, h.x2, h.y2);
+            const d3 = ccw(h.x1, h.y1, h.x2, h.y2, g.x1, g.y1), d4 = ccw(h.x1, h.y1, h.x2, h.y2, g.x2, g.y2);
+            return d1 * d2 < 0 && d3 * d4 < 0;
+          };
+          const ptSegDist = (px, py, g) => {
+            const dx = g.x2 - g.x1, dy = g.y2 - g.y1, len2 = dx * dx + dy * dy;
+            const t = len2 ? Math.max(0, Math.min(1, ((px - g.x1) * dx + (py - g.y1) * dy) / len2)) : 0;
+            return Math.hypot(px - (g.x1 + t * dx), py - (g.y1 + t * dy));
+          };
+          const segsNear = (g, h) => segsCross(g, h) || alongSeg(g, 16).some(pt => ptSegDist(pt.x, pt.y, h) < 3) || alongSeg(h, 16).some(pt => ptSegDist(pt.x, pt.y, g) < 3);
+          const radii = [28, 36, 46, 58, 72, 90];
+          const angles = [-35, -10, 20, -60, 45, -90, 70, 180, -125, 125];
+          const results = [];
+          list.forEach(d => {
+            const w = 7.4 * d.text.length + 6, h = 14;
+            let best = null;
+            radii.forEach((r, ri) => angles.forEach((deg, ai) => {
+              const rad = deg * Math.PI / 180;
+              const ux = Math.sin(rad), uy = -Math.cos(rad);
+              const cx = d.sx + ux * r, cy = d.sy + uy * r;
+              const rect = { x: cx - w / 2, y: cy - h / 2, w, h };
+              // leader runs from the marker edge to the label box edge
+              const tx = Math.abs(ux) < 1e-6 ? Infinity : (w / 2 + 2) / Math.abs(ux);
+              const ty = Math.abs(uy) < 1e-6 ? Infinity : (h / 2 + 2) / Math.abs(uy);
+              const t = Math.min(tx, ty);
+              const seg = { x1: d.sx + ux * 8, y1: d.sy + uy * 8, x2: cx - ux * t, y2: cy - uy * t };
+              const len = Math.hypot(seg.x2 - seg.x1, seg.y2 - seg.y1);
+              let bad = len < 6 ? 3 : 0;
+              if (rect.x < bounds2.l || rect.x + w > bounds2.r || rect.y < bounds2.t || rect.y + h > bounds2.b) bad += 5;
+              if (dots.some(o => inRect(o.x, o.y, rect, o.r + 1))) bad += 1;
+              if (fitSeg && segHitsRect(fitSeg, rect, 1)) bad += 1;
+              placed.forEach(o => {
+                if (rectsHit(rect, o.rect)) bad += 1;
+                if (o.seg && segHitsRect(o.seg, rect, 1)) bad += 1;
+                if (o.seg && segsNear(seg, o.seg)) bad += 1;
+                if (segHitsRect(seg, o.rect)) bad += 1;
+              });
+              dots.forEach(o => {
+                if (Math.hypot(o.x - d.sx, o.y - d.sy) < 1) return;
+                if (ptSegDist(o.x, o.y, seg) < o.r + 1) bad += 1;
+              });
+              const cost = bad * 1000 + r + ai * 2 + ri;
+              if (!best || cost < best.cost) best = { cost, rect, seg, cx, cy };
+            }));
+            placed.push({ rect: best.rect, seg: best.seg });
+            results.push({ d, ...best });
+          });
+          results.forEach(o => make("line", { x1: o.seg.x1, y1: o.seg.y1, x2: o.seg.x2, y2: o.seg.y2, class: "leader-line" }));
+          results.forEach(o => {
+            const label = make("text", { x: o.cx, y: o.cy + 4.5, "text-anchor": "middle", class: "point-label" });
+            label.textContent = o.d.text;
+          });
+        };
+        const markers = samplePts.map(d => {
+          const sx = x(Math.max(minX, Math.min(maxX, d.x)));
           const sy = y(d.y);
           if (d.out) {
             const size = 7;
@@ -1568,45 +850,22 @@ html>body{padding:0}</style>
           } else {
             make("circle", { cx: sx, cy: sy, r: 6, class: "sample-point" });
           }
-          return { text: `S${i + 1}`, sx, sy, x: sx, y: sy - 60 };
+          return { text: `S${d.index + 1}`, sx, sy };
         });
-        sampleLabels.sort((a, b) => a.y - b.y);
-        for (let i = 1; i < sampleLabels.length; i++) {
-          if (Math.abs(sampleLabels[i].x - sampleLabels[i - 1].x) < 48 && sampleLabels[i].y - sampleLabels[i - 1].y < 18) {
-            sampleLabels[i].y = sampleLabels[i - 1].y + 18;
-          }
-        }
-        for (let i = sampleLabels.length - 2; i >= 0; i--) {
-          if (sampleLabels[i + 1].y > m.top + innerH - 4) sampleLabels[i + 1].y = m.top + innerH - 4;
-          if (Math.abs(sampleLabels[i + 1].x - sampleLabels[i].x) < 48 && sampleLabels[i + 1].y - sampleLabels[i].y < 18) {
-            sampleLabels[i].y = sampleLabels[i + 1].y - 18;
-          }
-        }
-        const xOffsets = [0, 28, -28, 56, -56, 84, -84];
-        sampleLabels.forEach((d, i) => {
-          const nearby = sampleLabels.filter((other, j) => j < i && Math.abs(other.sx - d.sx) < 56 && Math.abs(other.y - d.y) < 24).length;
-          d.x = d.sx + xOffsets[Math.min(nearby, xOffsets.length - 1)];
-          d.x = Math.max(m.left + 12, Math.min(m.left + innerW - 12, d.x));
-        });
-        sampleLabels.forEach(d => {
-          const labelY = Math.max(m.top + 14, Math.min(m.top + innerH - 4, d.y));
-          make("line", { x1: d.sx, y1: d.sy - 7, x2: d.x, y2: labelY + 4, class: "leader-line" });
-          const label = make("text", { x: d.x, y: labelY, "text-anchor": "middle", class: "point-label" });
-          label.textContent = d.text;
-        });
+        if (markers.length <= 12) placeLabels(markers);
         const legendY = m.top + 12;
         make("circle", { cx: m.left + 4, cy: legendY - 4, r: 4, class: "std-point" });
         let lg = make("text", { x: m.left + 14, y: legendY, class: "legend-text" });
         lg.textContent = "STD";
         make("circle", { cx: m.left + 58, cy: legendY - 4, r: 4, class: "sample-point" });
         lg = make("text", { x: m.left + 68, y: legendY, class: "legend-text" });
-        lg.textContent = "Sample in";
-        make("path", { d: `M ${m.left + 166} ${legendY - 9} L ${m.left + 171} ${legendY - 4} L ${m.left + 166} ${legendY + 1} L ${m.left + 161} ${legendY - 4} Z`, class: "sample-point out" });
-        lg = make("text", { x: m.left + 178, y: legendY, class: "legend-text" });
-        lg.textContent = "Out";
+        lg.textContent = "Sample";
+        make("path", { d: `M ${m.left + 128} ${legendY - 9} L ${m.left + 133} ${legendY - 4} L ${m.left + 128} ${legendY + 1} L ${m.left + 123} ${legendY - 4} Z`, class: "sample-point out" });
+        lg = make("text", { x: m.left + 140, y: legendY, class: "legend-text" });
+        lg.textContent = "Out of range";
         const xt = make("text", { x: m.left + innerW / 2, y: height - 6, "text-anchor": "middle", class: "axis-title" });
         xt.textContent = "STD conc (ug/ul)";
-        const yt = make("text", { x: 16, y: m.top + innerH / 2, transform: `rotate(-90 16 ${m.top + innerH / 2})`, "text-anchor": "middle", class: "axis-title" });
+        const yt = make("text", { x: 12, y: m.top + innerH / 2, transform: `rotate(-90 12 ${m.top + innerH / 2})`, "text-anchor": "middle", class: "axis-title" });
         yt.textContent = "Abs.";
       };
       const update = () => {
@@ -1614,6 +873,7 @@ html>body{padding:0}</style>
         root.querySelector("#slope").textContent = fit ? fit.slope.toFixed(4) : "-";
         root.querySelector("#intercept").textContent = fit ? fit.intercept.toFixed(4) : "-";
         root.querySelector("#r2").textContent = fit ? fit.r2.toFixed(4) : "-";
+        root.style.setProperty("--ps", printScale().toFixed(3));
         renderStandards();
         renderSamples(fit);
         renderPrep(fit);
@@ -1622,14 +882,20 @@ html>body{padding:0}</style>
       root.querySelector("#apply-std").addEventListener("click", () => {
         const absRows = parseMatrix(root.querySelector("#std-paste").value);
         const concs = parseFlatNumbers(root.querySelector("#std-conc-paste").value);
-        const sourceConcs = concs.length ? concs : defaultConcs;
         if (!absRows.length) {
           root.querySelector("#std-status").textContent = "STD Abs values could not be recognized";
           return;
         }
-        standards = absRows.map((values, i) => ({ use: true, conc: sourceConcs[i] ?? defaultConcs[i] ?? i, values }));
+        // One line = one STD point, kept in input order; the number of columns in a line is its n.
+        // custom concs that run short leave the remaining points blank (excluded from the fit) rather than guessing
+        standards = absRows.map((values, i) => ({ use: true, conc: concs.length ? (concs[i] ?? NaN) : (defaultConcs[i] ?? i), values }));
         const concMode = concs.length ? "custom concentrations" : "default concentrations";
-        root.querySelector("#std-status").textContent = `Applied ${absRows.length} STD rows (${concMode})`;
+        const counts = absRows.map(values => values.length);
+        const nMin = Math.min(...counts), nMax = Math.max(...counts);
+        const skipped = root.querySelector("#std-paste").value.split(/\r?\n/).filter(line => line.trim()).length - absRows.length;
+        root.querySelector("#std-status").textContent = `Applied ${absRows.length} STD point${absRows.length > 1 ? "s" : ""} in input order (n = ${nMin === nMax ? nMin : `${nMin}-${nMax}`}, ${concMode})`
+          + (skipped > 0 ? `; skipped ${skipped} line${skipped > 1 ? "s" : ""} without numbers` : "")
+          + (concs.length && concs.length !== absRows.length ? `; ${concs.length} conc values for ${absRows.length} Abs rows, please check; points without a conc are excluded` : "");
         update();
       });
       root.querySelector("#apply-sample").addEventListener("click", () => {
@@ -1638,8 +904,12 @@ html>body{padding:0}</style>
           root.querySelector("#sample-status").textContent = "Sample raw values could not be recognized";
           return;
         }
-        samples = rows.map((values, i) => ({ name: samples[i]?.name ?? `Sample ${i + 1}`, values, dilution: samples[i]?.dilution ?? 1 }));
-        root.querySelector("#sample-status").textContent = `Applied ${rows.length} sample rows`;
+        // One line = one sample, named by input order; the number of columns in a line is its n.
+        samples = rows.map((values, i) => ({ name: `Sample ${i + 1}`, values, dilution: samples[i]?.dilution ?? 1, show: samples[i]?.show ?? true }));
+        const counts = rows.map(values => values.length);
+        const nMin = Math.min(...counts), nMax = Math.max(...counts);
+        const skipped = root.querySelector("#sample-paste").value.split(/\r?\n/).filter(line => line.trim()).length - rows.length;
+        root.querySelector("#sample-status").textContent = `Applied ${rows.length} sample${rows.length > 1 ? "s" : ""} in input order (n = ${nMin === nMax ? nMin : `${nMin}-${nMax}`})` + (skipped > 0 ? `; skipped ${skipped} line${skipped > 1 ? "s" : ""} without numbers` : "");
         update();
       });
       root.querySelector("#example-std").addEventListener("click", () => {
@@ -1678,250 +948,19 @@ html>body{padding:0}</style>
         root.querySelector(selector).addEventListener("input", update);
       });
       root.querySelector("#print-page").addEventListener("click", () => window.print());
-      new ResizeObserver(update).observe(chart);
+      // The page title becomes the print header and the default PDF file name: YYYYMMDD_protein
+      const pageTitle = document.title;
+      window.addEventListener("beforeprint", () => {
+        const d = new Date();
+        const pad = n => String(n).padStart(2, "0");
+        document.title = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_protein`;
+      });
+      window.addEventListener("afterprint", () => {
+        document.title = pageTitle;
+      });
       update();
     })();
   </script>
 </div>
-
-<script src="https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js"></script>
-<script src="https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js"></script>
-<script>
-(() => {
-  if (window.FloatingUIDOM == null) {
-    return;
-  }
-  const { autoUpdate, computePosition, flip, offset, shift, size } =
-    window.FloatingUIDOM;
-  const tooltipPlacements = new Set(["top", "right", "bottom", "left"]);
-  const tooltipId = `codex-visualization-tooltip-${
-    window.crypto?.randomUUID?.() ?? Date.now().toString(36)
-  }`;
-  const tooltipGap = 5;
-  const hoverDelay = 700;
-  const skipDelay = 300;
-  let activeTrigger = null;
-  let pendingTrigger = null;
-  let tooltip = null;
-  let openTimeout = null;
-  let autoUpdateCleanup = null;
-  let positionRequest = 0;
-  let skipDelayUntil = 0;
-
-  const getTrigger = (target) =>
-    target?.nodeType === Node.ELEMENT_NODE
-      ? target.closest("[data-tooltip]")
-      : null;
-  const containsTarget = (trigger, target) =>
-    target?.nodeType != null && trigger.contains(target);
-  const getContent = (trigger) =>
-    trigger.getAttribute("data-tooltip")?.trim() ?? "";
-  const getPlacement = (trigger) => {
-    const placement = trigger.getAttribute("data-tooltip-placement");
-    return tooltipPlacements.has(placement) ? placement : "top";
-  };
-  const getTooltip = () => {
-    if (tooltip == null) {
-      tooltip = document.createElement("div");
-      tooltip.id = tooltipId;
-      tooltip.className = "tooltip";
-      tooltip.setAttribute("role", "tooltip");
-    }
-    return tooltip;
-  };
-  const setDescribedBy = (trigger, described) => {
-    const ids = new Set(
-      (trigger.getAttribute("aria-describedby") ?? "")
-        .split(/\s+/)
-        .filter(Boolean),
-    );
-    if (described) {
-      ids.add(tooltipId);
-    } else {
-      ids.delete(tooltipId);
-    }
-    if (ids.size === 0) {
-      trigger.removeAttribute("aria-describedby");
-    } else {
-      trigger.setAttribute("aria-describedby", [...ids].join(" "));
-    }
-  };
-  const clearOpenTimeout = () => {
-    if (openTimeout != null) {
-      window.clearTimeout(openTimeout);
-      openTimeout = null;
-    }
-    pendingTrigger = null;
-  };
-  const closeTooltip = (activateSkipDelay = true) => {
-    clearOpenTimeout();
-    positionRequest += 1;
-    autoUpdateCleanup?.();
-    autoUpdateCleanup = null;
-    if (activeTrigger == null) {
-      return;
-    }
-    setDescribedBy(activeTrigger, false);
-    activeTrigger = null;
-    tooltip?.remove();
-    if (activateSkipDelay) {
-      skipDelayUntil = Date.now() + skipDelay;
-    }
-  };
-  const updatePosition = (trigger, floating) => {
-    const request = ++positionRequest;
-    void computePosition(trigger, floating, {
-      middleware: [
-        offset(tooltipGap),
-        flip({ padding: tooltipGap }),
-        shift({ padding: tooltipGap }),
-        size({
-          padding: tooltipGap,
-          apply({ availableHeight, availableWidth, elements }) {
-            elements.floating.style.setProperty(
-              "--tooltip-available-width",
-              `${Math.max(0, availableWidth)}px`,
-            );
-            elements.floating.style.setProperty(
-              "--tooltip-available-height",
-              `${Math.max(0, availableHeight)}px`,
-            );
-          },
-        }),
-      ],
-      placement: getPlacement(trigger),
-      strategy: "fixed",
-    })
-      .then(({ x, y }) => {
-        if (activeTrigger !== trigger || request !== positionRequest) {
-          return;
-        }
-        const scale = window.devicePixelRatio || 1;
-        floating.style.transform = `translate(${Math.round(x * scale) / scale}px, ${Math.round(y * scale) / scale}px)`;
-        floating.style.visibility = "visible";
-      })
-      .catch(() => {
-        if (activeTrigger === trigger && request === positionRequest) {
-          closeTooltip(false);
-        }
-      });
-  };
-  const openTooltip = (trigger) => {
-    const content = getContent(trigger);
-    if (!trigger.isConnected || content.length === 0) {
-      return;
-    }
-    clearOpenTimeout();
-    if (activeTrigger === trigger) {
-      return;
-    }
-    closeTooltip();
-    const floating = getTooltip();
-    floating.textContent = content;
-    floating.style.visibility = "hidden";
-    floating.style.transform = "translate(0, 0)";
-    document.body.appendChild(floating);
-    activeTrigger = trigger;
-    setDescribedBy(trigger, true);
-    autoUpdateCleanup = autoUpdate(trigger, floating, () => {
-      updatePosition(trigger, floating);
-    });
-  };
-  const requestOpen = (trigger, immediate = false) => {
-    if (
-      getContent(trigger).length === 0 ||
-      activeTrigger === trigger ||
-      pendingTrigger === trigger
-    ) {
-      return;
-    }
-    clearOpenTimeout();
-    pendingTrigger = trigger;
-    const delay =
-      immediate || activeTrigger != null || Date.now() < skipDelayUntil
-        ? 0
-        : hoverDelay;
-    if (delay === 0) {
-      openTooltip(trigger);
-      return;
-    }
-    openTimeout = window.setTimeout(() => {
-      openTimeout = null;
-      pendingTrigger = null;
-      openTooltip(trigger);
-    }, delay);
-  };
-  const handlePointerOpen = (event) => {
-    if (event.pointerType === "touch") {
-      return;
-    }
-    const trigger = getTrigger(event.target);
-    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
-      return;
-    }
-    requestOpen(trigger);
-  };
-  const handleLeave = (event) => {
-    const trigger = getTrigger(event.target);
-    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
-      return;
-    }
-    if (activeTrigger === trigger || pendingTrigger === trigger) {
-      closeTooltip();
-    }
-  };
-  const handleFocusIn = (event) => {
-    const trigger = getTrigger(event.target);
-    if (trigger?.matches(":focus-visible")) {
-      requestOpen(trigger, true);
-    }
-  };
-  const handleKeyDown = (event) => {
-    if (event.key === "Escape") {
-      closeTooltip();
-    }
-  };
-  const handleContextMenu = (event) => {
-    const trigger = getTrigger(event.target);
-    if (activeTrigger === trigger || pendingTrigger === trigger) {
-      closeTooltip();
-    }
-  };
-  const destroy = () => {
-    closeTooltip(false);
-    document.removeEventListener("pointerover", handlePointerOpen);
-    document.removeEventListener("pointerout", handleLeave);
-    document.removeEventListener("focusin", handleFocusIn);
-    document.removeEventListener("focusout", handleLeave);
-    document.removeEventListener("keydown", handleKeyDown);
-    document.removeEventListener("contextmenu", handleContextMenu);
-    tooltip = null;
-  };
-
-  document.addEventListener("pointerover", handlePointerOpen);
-  document.addEventListener("pointerout", handleLeave);
-  document.addEventListener("focusin", handleFocusIn);
-  document.addEventListener("focusout", handleLeave);
-  document.addEventListener("keydown", handleKeyDown);
-  document.addEventListener("contextmenu", handleContextMenu);
-  window.addEventListener("pagehide", destroy, { once: true });
-})();
-</script>
-<script id="codex-visualization-lucide" async src="https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js"></script>
-<script>
-(() => {
-  const initialize = () => {
-    globalThis.lucide?.createIcons({ attrs: { width: 16, height: 16 } });
-  };
-  if (globalThis.lucide != null) {
-    initialize();
-    return;
-  }
-  document
-    .getElementById("codex-visualization-lucide")
-    ?.addEventListener("load", initialize, { once: true });
-})();
-</script>
-
 </body>
 </html>

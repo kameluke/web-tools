@@ -8,18 +8,20 @@ STD濃度とAbs値、サンプルのAbs値を貼り付けると、標準曲線�
 
 ### 主な機能
 
-- STD濃度とAbs値の貼り付け入力
-- Sample Abs値の貼り付け入力
+- STD濃度とAbs値の貼り付け入力（1行＝1点。入力順に処理。反復は列方向に入力し、1列ならn=1、2列ならn=2）
+- Sample Abs値の貼り付け入力（1行＝1サンプル。入力順に Sample 1, 2, … と命名。同一サンプルの反復は列方向に入力し、1列ならn=1、2列ならn=2）
 - 標準曲線、傾き、切片、R²の自動計算
 - サンプル濃度の算出
 - 希釈倍率を反映した最終濃度の計算
 - 必要タンパク量、total volume、サンプル数から調製量を計算
+- サンプルごとのグラフ表示のオン・オフ（Plot列のチェック。計算や調製量には影響しません）
+- 引き出し線が重ならないサンプルラベル表示
 - 調製量テーブルのクリップボードコピー
-- 印刷対応
+- 印刷対応（A4縦1枚。サンプル数に応じて自動で縮小。目安として28サンプルまで）
 
 ### 使い方
 
-`protein-quantification-calculator.html` をブラウザで開いて使用します。
+`index.html` をブラウザで開いて使用します。
 
 ### 免責事項
 
@@ -35,18 +37,20 @@ Paste standard concentrations, standard Abs values, and sample Abs values to gen
 
 ### Features
 
-- Paste input for standard concentrations and Abs values
-- Paste input for sample Abs values
+- Paste input for standard concentrations and Abs values (one row per STD point in input order; replicates go across columns: 1 column = n=1, 2 columns = n=2)
+- Paste input for sample Abs values (one row per sample, named Sample 1, 2, ... in input order; replicates of a sample go across columns: 1 column = n=1, 2 columns = n=2)
 - Automatic standard curve, slope, intercept, and R² calculation
 - Sample concentration calculation
 - Final concentration calculation with dilution factor
 - Preparation volume calculation from required protein amount, total volume, and number of samples
+- Per-sample toggle for showing points on the graph (Plot checkbox; calculations and preparation volumes are unaffected)
+- Sample labels with non-overlapping leader lines
 - Copy preparation table to clipboard
-- Print support
+- Print support (one A4 portrait page; scales down automatically with the number of samples, up to about 28 samples)
 
 ### Usage
 
-Open `protein-quantification-calculator.html` in a web browser.
+Open `index.html` in a web browser.
 
 ### Disclaimer
 
@@ -54,4 +58,4 @@ This application is a simple calculation tool intended to support research and e
 
 ---
 
-Created with Codex | 2026/8/21 kamel
+Created with Codex & Claude | kamel
