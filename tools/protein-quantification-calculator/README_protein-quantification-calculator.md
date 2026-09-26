@@ -17,6 +17,7 @@ STD濃度とAbs値、サンプルのAbs値を貼り付けると、標準曲線�
 - サンプルごとのグラフ表示のオン・オフ（Plot列のチェック。計算や調製量には影響しません）
 - 引き出し線が重ならないサンプルラベル表示
 - 調製量テーブルのクリップボードコピー
+- 入力データのJSONファイルへの書き出し（Export）と読み込み（Import）。STD・Sampleの入力欄に加え、Use・濃度・サンプル名・希釈倍率・Plot・調製条件の編集内容も復元されます
 - 印刷対応（A4縦1枚。サンプル数に応じて自動で縮小。目安として28サンプルまで）
 
 ### 使い方
@@ -46,6 +47,7 @@ Paste standard concentrations, standard Abs values, and sample Abs values to gen
 - Per-sample toggle for showing points on the graph (Plot checkbox; calculations and preparation volumes are unaffected)
 - Sample labels with non-overlapping leader lines
 - Copy preparation table to clipboard
+- Export all inputs to a JSON file and import them later; restores the paste fields plus table edits (Use, concentrations, sample names, dilutions, Plot) and preparation settings
 - Print support (one A4 portrait page; scales down automatically with the number of samples, up to about 28 samples)
 
 ### Usage

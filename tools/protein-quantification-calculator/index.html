@@ -71,7 +71,16 @@
   }
 
   /* ---------- Header ---------- */
-  .app-head { padding: 8px 4px 12px; }
+  .app-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px 16px;
+    padding: 8px 4px 12px;
+  }
+  .app-head .actions { margin: 0; }
+  .app-head .status { min-height: 0; }
   .app-title {
     margin: 0;
     font-size: 34px;
@@ -371,8 +380,16 @@
 <a class="back" href="../../">&lsaquo; Web Tools</a>
 <div id="protein-calculator">
   <header class="app-head">
-    <h1 class="app-title">Protein Quantification Calculator</h1>
-    <p class="app-lead">Paste absorbance readings to build a standard curve, quantify samples, and plan loading volumes.</p>
+    <div>
+      <h1 class="app-title">Protein Quantification Calculator</h1>
+      <p class="app-lead">Paste absorbance readings to build a standard curve, quantify samples, and plan loading volumes.</p>
+    </div>
+    <div class="actions">
+      <span class="status" id="file-status"></span>
+      <button type="button" class="btn" id="import-data">Import</button>
+      <button type="button" class="btn" id="export-data">Export</button>
+      <input type="file" id="import-file" accept=".json,application/json" hidden>
+    </div>
   </header>
 
   <section class="two-col input-section">
@@ -502,6 +519,7 @@
   <details class="changelog">
     <summary>Changelog</summary>
     <ul>
+      <li><span class="ver">v1.3</span><span class="date">2026/09/26</span><span>Export / Import of all inputs as a JSON file</span></li>
       <li><span class="ver">v1.2</span><span class="date">2026/09/21</span><span>Redesign, one-page A4 print, Plot toggle, input-order naming, YYYYMMDD_protein print title</span></li>
       <li><span class="ver">v1.1</span><span class="date">2026/08/31</span><span>Added back link to Web Tools</span></li>
       <li><span class="ver">v1.0</span><span class="date">2026/08/21</span><span>Initial release</span></li>
@@ -948,12 +966,70 @@
         root.querySelector(selector).addEventListener("input", update);
       });
       root.querySelector("#print-page").addEventListener("click", () => window.print());
+      const dateStamp = () => {
+        const d = new Date();
+        const pad = n => String(n).padStart(2, "0");
+        return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+      };
+      // Export / Import: every input, including edits made in the tables, round-trips through one JSON file.
+      // JSON has no NaN, so blank numbers are written as null and read back as NaN.
+      const fileFormat = "protein-quantification-calculator";
+      const textFields = { stdConc: "#std-conc-paste", stdAbs: "#std-paste", sampleAbs: "#sample-paste", targetProtein: "#target-protein", targetTotal: "#target-total", prepCount: "#prep-count" };
+      const toNum = v => (v === null || v === undefined || v === "") ? NaN : Number(v);
+      const numList = list => Array.isArray(list) ? list.map(Number).filter(Number.isFinite) : [];
+      const setFileStatus = text => {
+        const status = root.querySelector("#file-status");
+        status.textContent = text;
+        window.setTimeout(() => {
+          if (status.textContent === text) status.textContent = "";
+        }, 4000);
+      };
+      root.querySelector("#export-data").addEventListener("click", () => {
+        const inputs = Object.fromEntries(Object.entries(textFields).map(([key, selector]) => [key, root.querySelector(selector).value]));
+        const data = {
+          format: fileFormat,
+          version: 1,
+          savedAt: new Date().toISOString(),
+          inputs,
+          standards: standards.map(row => ({ use: row.use, conc: Number.isFinite(row.conc) ? row.conc : null, values: row.values })),
+          samples: samples.map(row => ({ name: row.name, values: row.values, dilution: Number.isFinite(row.dilution) ? row.dilution : null, show: row.show !== false }))
+        };
+        const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${dateStamp()}_protein.json`;
+        document.body.append(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        setFileStatus("Exported");
+      });
+      root.querySelector("#import-data").addEventListener("click", () => root.querySelector("#import-file").click());
+      root.querySelector("#import-file").addEventListener("change", async event => {
+        const input = event.target;
+        const file = input.files[0];
+        input.value = ""; // allow re-importing the same file
+        if (!file) return;
+        try {
+          const data = JSON.parse(await file.text());
+          if (data?.format !== fileFormat || !Array.isArray(data.standards) || !Array.isArray(data.samples)) throw new Error("format");
+          Object.entries(textFields).forEach(([key, selector]) => {
+            if (typeof data.inputs?.[key] === "string") root.querySelector(selector).value = data.inputs[key];
+          });
+          standards = data.standards.map(row => ({ use: row.use !== false, conc: toNum(row.conc), values: numList(row.values) }));
+          samples = data.samples.map((row, i) => ({ name: String(row.name ?? `Sample ${i + 1}`), values: numList(row.values), dilution: toNum(row.dilution), show: row.show !== false }));
+          root.querySelector("#std-status").textContent = "";
+          root.querySelector("#sample-status").textContent = "";
+          update();
+          setFileStatus(`Imported ${file.name}`);
+        } catch {
+          setFileStatus("Import failed: not a Protein Quantification Calculator file");
+        }
+      });
       // The page title becomes the print header and the default PDF file name: YYYYMMDD_protein
       const pageTitle = document.title;
       window.addEventListener("beforeprint", () => {
-        const d = new Date();
-        const pad = n => String(n).padStart(2, "0");
-        document.title = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_protein`;
+        document.title = `${dateStamp()}_protein`;
       });
       window.addEventListener("afterprint", () => {
         document.title = pageTitle;
