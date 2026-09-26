@@ -17,6 +17,7 @@ ExcelなどからCt/Cq結果を貼り付けると、標準系列から検量線�
 - lot、コメント、total volume、dish数の入力
 - gc/dishの計算
 - 表の印刷対応
+- 入力データのJSONファイルへの書き出し（Export）と読み込み（Import）。貼り付け欄に加え、標準系列・未知サンプル・集計の編集内容も復元されます
 
 ### 使い方
 
@@ -45,6 +46,7 @@ Paste Ct/Cq results from Excel or similar software to generate a standard curve 
 - Manual entry for lot, comments, total volume, and dish count
 - gc/dish calculation
 - Print support
+- Export all inputs to a JSON file and import them later; restores the paste boxes plus edits to the standard curve, unknown samples and summary table
 
 ### Usage
 

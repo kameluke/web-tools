@@ -75,7 +75,16 @@
   }
 
   /* ---------- Header ---------- */
-  .app-head { padding: 8px 4px 12px; }
+  .app-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px 16px;
+    padding: 8px 4px 12px;
+  }
+  .app-head .actions { margin: 0; }
+  .app-head .status { min-height: 0; margin: 0; }
   .app-title {
     margin: 0;
     font-size: 34px;
@@ -406,6 +415,12 @@
 <div id="qpcr-calculator">
   <header class="app-head">
     <h1 class="app-title">AAV titer Calculator</h1>
+    <div class="actions">
+      <span class="status" id="file-status"></span>
+      <button type="button" class="btn" id="import-data">Import</button>
+      <button type="button" class="btn" id="export-data">Export</button>
+      <input type="file" id="import-file" accept=".json,application/json" hidden>
+    </div>
   </header>
   <div class="paste-row no-print">
     <div class="panel" id="std-paste-panel">
@@ -465,12 +480,12 @@
       <thead>
         <tr>
           <th>集計</th>
-          <th>well</th>
-          <th style="width: 26%">sample</th>
-          <th>Ct</th>
+          <th>Well</th>
+          <th style="width: 26%">Sample</th>
+          <th>Ct/Cq</th>
+          <th>Copy</th>
           <th>希釈</th>
-          <th>copy</th>
-          <th>titer(gc/ul)</th>
+          <th>Titer (gc/ul)</th>
         </tr>
       </thead>
       <tbody id="unk-body"></tbody>
@@ -507,6 +522,7 @@
   <details class="changelog">
     <summary>更新履歴</summary>
     <ul>
+      <li><span class="ver">v1.4</span><span class="date">2026/09/26</span><span>入力データのJSON Export / Import、未知サンプルの列順を変更</span></li>
       <li><span class="ver">v1.3</span><span class="date">2026/09/15</span><span>未知サンプルをサンプル単位で縞模様表示</span></li>
       <li><span class="ver">v1.2</span><span class="date">2026/09/15</span><span>貼り付け欄を分離・印刷をA4 1枚に対応</span></li>
       <li><span class="ver">v1.1</span><span class="date">2026/09/09</span><span>機能改善・印刷対応</span></li>
@@ -919,7 +935,7 @@
           copyTd.textContent = fmtTiter(copy);
           const titerTd = document.createElement("td");
           titerTd.textContent = fmtTiter(titer);
-          tr.append(includeTd, wellTd, nameTd, ctTd, dilutionTd, copyTd, titerTd);
+          tr.append(includeTd, wellTd, nameTd, ctTd, copyTd, dilutionTd, titerTd);
           unkBody.append(tr);
         });
         groups.forEach((data, groupName) => {
@@ -1148,6 +1164,78 @@
         std.sort((a, b) => b.log - a.log);
         renderStd();
         update();
+      });
+      // Export / Import: paste boxes, table edits and summary settings round-trip through one JSON file.
+      // JSON has no NaN, so blank numbers are written as null and read back as NaN.
+      const fileFormat = "aav-titer-calculator";
+      const toNum = v => (v === null || v === undefined || v === "") ? NaN : Number(v);
+      const orNull = v => Number.isFinite(v) ? v : null;
+      const setFileStatus = text => {
+        const status = root.querySelector("#file-status");
+        status.textContent = text;
+        window.setTimeout(() => {
+          if (status.textContent === text) status.textContent = "";
+        }, 4000);
+      };
+      root.querySelector("#export-data").addEventListener("click", () => {
+        const data = {
+          format: fileFormat,
+          version: 1,
+          savedAt: new Date().toISOString(),
+          inputs: {
+            stdPaste: root.querySelector("#std-paste-box").value,
+            samplePaste: root.querySelector("#sample-paste-box").value
+          },
+          ntcCt: orNull(ntcCt),
+          std: std.map(row => ({ use: row.use, copy: orNull(row.copy), log: orNull(row.log), ct: orNull(row.ct) })),
+          unknowns: unknowns.map(row => ({ include: row.include !== false, well: row.well || "", name: row.name, ct: orNull(row.ct), dilution: row.dilution, dilutionTouched: !!row.dilutionTouched })),
+          groupSettings: [...groupSettings].map(([group, settings]) => ({ group, comment: settings.comment, lot: settings.lot, volume: orNull(settings.volume), dishes: orNull(settings.dishes) }))
+        };
+        const d = new Date();
+        const pad = n => String(n).padStart(2, "0");
+        const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_AAV_titer.json`;
+        document.body.append(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        setFileStatus("Exported");
+      });
+      root.querySelector("#import-data").addEventListener("click", () => root.querySelector("#import-file").click());
+      root.querySelector("#import-file").addEventListener("change", async event => {
+        const input = event.target;
+        const file = input.files[0];
+        input.value = ""; // allow re-importing the same file
+        if (!file) return;
+        try {
+          const data = JSON.parse(await file.text());
+          if (data?.format !== fileFormat || !Array.isArray(data.std) || !Array.isArray(data.unknowns)) throw new Error("format");
+          root.querySelector("#std-paste-box").value = String(data.inputs?.stdPaste ?? "");
+          root.querySelector("#sample-paste-box").value = String(data.inputs?.samplePaste ?? "");
+          ntcCt = toNum(data.ntcCt);
+          std = data.std.map(row => ({ use: row.use !== false, copy: toNum(row.copy), log: toNum(row.log), ct: toNum(row.ct) }));
+          unknowns = data.unknowns.map(row => ({
+            include: row.include !== false,
+            well: String(row.well ?? ""),
+            name: String(row.name ?? ""),
+            ct: toNum(row.ct),
+            dilution: toNum(row.dilution),
+            dilutionTouched: !!row.dilutionTouched
+          }));
+          groupSettings.clear();
+          (Array.isArray(data.groupSettings) ? data.groupSettings : []).forEach(row => {
+            groupSettings.set(String(row.group), { comment: String(row.comment ?? ""), lot: String(row.lot ?? ""), volume: toNum(row.volume), dishes: toNum(row.dishes) });
+          });
+          root.querySelector("#std-paste-status").textContent = "";
+          root.querySelector("#sample-paste-status").textContent = "";
+          renderStd();
+          update();
+          setFileStatus(`Imported ${file.name}`);
+        } catch {
+          setFileStatus("Import failed: AAV titer Calculator のファイルではありません");
+        }
       });
       const ro = new ResizeObserver(update);
       ro.observe(chart);
