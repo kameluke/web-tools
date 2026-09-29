@@ -1,0 +1,837 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Plasmid Dilution Calculator</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --ink: #1d1d1f;
+    --muted: #6e6e73;
+    --line: rgba(0, 0, 0, 0.08);
+    --fill: #f5f5f7;
+    --fill-strong: #e8e8ed;
+    --accent: #0071e3;
+    --accent-hover: #0077ed;
+    --accent-soft: rgba(0, 113, 227, 0.1);
+    --warn: #ff9500;
+    --bad: #d70015;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Segoe UI", sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --card: #1c1c1e;
+      --ink: #f5f5f7;
+      --muted: #98989d;
+      --line: rgba(255, 255, 255, 0.12);
+      --fill: #2c2c2e;
+      --fill-strong: #3a3a3c;
+      --accent: #2997ff;
+      --accent-hover: #4aa8ff;
+      --accent-soft: rgba(41, 151, 255, 0.16);
+      --warn: #ff9f0a;
+      --bad: #ff453a;
+      --shadow: none;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .back {
+    display: block;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 20px 24px 0;
+    color: var(--accent);
+    font-size: 13px;
+    text-decoration: none;
+  }
+  .back:hover { text-decoration: underline; }
+
+  #plasmid-dilution {
+    display: grid;
+    gap: 16px;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 12px 24px 40px;
+  }
+
+  /* ---------- Header ---------- */
+  .app-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px 16px;
+    padding: 8px 4px 12px;
+  }
+  .app-head .actions { margin: 0; }
+  .app-head .status { min-height: 0; margin: 0; }
+  .app-title {
+    margin: 0;
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+  }
+
+  /* ---------- Layout ---------- */
+  .top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
+  }
+  .panel {
+    min-width: 0;
+    padding: 20px 22px;
+    border-radius: 20px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+  h3 {
+    margin: 0 0 14px;
+    font-size: 19px;
+    font-weight: 650;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+  .panel-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+    margin-bottom: 14px;
+  }
+  .panel-header h3 { margin: 0; }
+  .panel-header .actions { margin: 0; }
+
+  /* ---------- Form ---------- */
+  .form {
+    display: grid;
+    grid-template-columns: 148px minmax(0, 1fr);
+    gap: 8px 12px;
+    align-items: center;
+  }
+  .form label { color: var(--muted); font-size: 13px; }
+  .form label.strong { color: var(--bad); font-weight: 600; }
+  .form .sep { grid-column: 1 / -1; height: 1px; margin: 4px 0; background: var(--line); }
+  .field { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .field .unit { flex: 0 0 auto; color: var(--muted); font-size: 13px; }
+  .field input[type="number"] { max-width: 140px; }
+  .field select.unit-select { width: auto; flex: 0 0 auto; }
+  .field .pow { flex: 0 0 auto; color: var(--muted); font-size: 13px; }
+  .field .pow + input { max-width: 64px; }
+  .computed { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  input[type="number"],
+  input[type="text"],
+  input[type="date"],
+  select {
+    width: 100%;
+    min-width: 0;
+    padding: 5px 9px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: var(--fill);
+    color: var(--ink);
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+  select {
+    padding-right: 26px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2386868b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 9px center;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+  }
+  input:hover, select:hover { background-color: var(--fill-strong); }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    background-color: var(--card);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .status { min-height: 1.45em; margin-top: 8px; color: var(--muted); font-size: 12px; }
+  .note { margin-top: 10px; color: var(--muted); font-size: 12px; }
+  .warn-box {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(215, 0, 21, 0.08);
+    color: var(--bad);
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .warn-box[hidden] { display: none; }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .btn {
+    padding: 6px 16px;
+    border: 0;
+    border-radius: 980px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .btn:hover { background: var(--fill-strong); }
+  .btn:active { opacity: 0.7; }
+  .btn:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 1px; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.primary:hover { background: var(--accent-hover); }
+  .btn.text { background: transparent; }
+  .btn.text:hover { background: var(--accent-soft); }
+
+  /* ---------- Calculation steps ---------- */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .metric span { display: block; color: var(--muted); font-size: 12px; font-weight: 500; }
+  .metric strong {
+    display: block;
+    margin-top: 2px;
+    font-size: 22px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .metric small { color: var(--muted); font-size: 13px; font-weight: 500; }
+  /* 左辺・=・右辺の3列で、= の位置を縦に揃える */
+  .steps {
+    display: grid;
+    grid-template-columns: max-content max-content minmax(0, 1fr);
+    gap: 6px 8px;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .steps .lhs { text-align: right; }
+  .steps .eq { color: var(--muted); }
+  .steps b { color: var(--ink); font-weight: 600; }
+  .steps .caption { grid-column: 1 / -1; margin-top: 8px; color: var(--muted); font-size: 12px; }
+  .steps .caption:first-child { margin-top: 0; }
+  .steps .caption.last { margin-top: 2px; color: var(--ink); font-weight: 600; }
+  .steps .fn-ref { margin-left: 1px; color: var(--muted); font-size: 9px; vertical-align: super; line-height: 0; }
+  /* 註 */
+  ol.footnotes { margin: 14px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 11px; }
+  ol.footnotes li { display: flex; gap: 4px; }
+
+  /* ---------- Table ---------- */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  th, td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--line);
+    text-align: right;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  th { color: var(--muted); font-size: 12px; font-weight: 500; }
+  th:first-child, td:first-child { padding-left: 0; text-align: left; }
+  th:last-child, td:last-child { padding-right: 0; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td input[type="number"] { width: 76px; text-align: right; }
+  td.copies { font-weight: 650; }
+  td.src { color: var(--muted); text-align: left; }
+  tr.bad-row td { color: var(--bad); }
+  .bad { color: var(--bad); font-weight: 600; }
+  .red { color: var(--bad); }
+  .tube {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 650;
+  }
+
+  /* ---------- Footer ---------- */
+  .app-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 4px 0;
+  }
+  .credit { color: var(--muted); font-size: 12px; }
+  .app-foot .actions { margin: 0; }
+
+  .changelog { padding: 0 4px; color: var(--muted); font-size: 12px; }
+  .changelog summary { display: inline-block; cursor: pointer; list-style: none; user-select: none; }
+  .changelog summary::-webkit-details-marker { display: none; }
+  .changelog summary::before { content: "\25B8\00a0"; }
+  .changelog[open] summary::before { content: "\25BE\00a0"; }
+  .changelog summary:hover { color: var(--ink); }
+  .changelog ul { margin: 6px 0 0; padding: 0; list-style: none; }
+  .changelog li { display: flex; gap: 12px; margin-top: 4px; }
+  .changelog .ver { flex: 0 0 32px; font-variant-numeric: tabular-nums; }
+  .changelog .date { flex: 0 0 76px; font-variant-numeric: tabular-nums; }
+
+  #copy-fallback {
+    display: block;
+    width: 100%;
+    height: 90px;
+    margin-top: 8px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--fill);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  #copy-fallback[hidden] { display: none; }
+
+  @media (max-width: 760px) {
+    #plasmid-dilution { padding: 8px 16px 32px; }
+    .back { padding: 16px 16px 0; }
+    .app-title { font-size: 28px; }
+    .top { grid-template-columns: 1fr; }
+    .panel { padding: 18px; }
+    .form { grid-template-columns: 110px minmax(0, 1fr); }
+    .dilution-table { min-width: 640px; }
+  }
+
+  /* ---------- Print: A4, one page ---------- */
+  @page { size: A4 portrait; margin: 10mm; }
+  @media print {
+    :root {
+      --bg: #fff; --card: #fff; --ink: #1d1d1f; --muted: #6e6e73;
+      --line: rgba(0, 0, 0, 0.14); --fill: transparent; --fill-strong: transparent;
+      --accent: #0071e3; --accent-soft: rgba(0, 113, 227, 0.1); --bad: #d70015; --shadow: none;
+    }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    html, body { background: #fff; font-size: 11px; }
+    .back, .actions, .no-print, .changelog, .app-foot { display: none !important; }
+    #plasmid-dilution { max-width: none; gap: 8px; padding: 0; }
+    .app-head { padding: 0 0 2px; }
+    .app-title { font-size: 18px; }
+    .top { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+    .panel { padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; break-inside: avoid; }
+    h3 { margin: 0 0 6px; font-size: 13px; }
+    .panel-header { margin-bottom: 6px; }
+    .form { grid-template-columns: 120px minmax(0, 1fr); gap: 3px 8px; }
+    .form label, .field .unit { font-size: 11px; }
+    .metrics { gap: 6px; margin-bottom: 8px; }
+    .metric span { font-size: 10px; }
+    .metric strong { font-size: 14px; }
+    .steps { gap: 2px 6px; font-size: 11px; }
+    table { font-size: 11px; }
+    th, td { padding: 3px 5px; }
+    td input[type="number"] { width: 48px; }
+    .tube { width: 18px; height: 18px; font-size: 10px; }
+    input[type="number"], input[type="text"], input[type="date"], select {
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+      box-shadow: none;
+      color: inherit;
+      font: inherit;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    select { background-image: none; padding-right: 0; }
+    .note { font-size: 9px; margin-top: 4px; }
+    ol.footnotes { margin-top: 6px; font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+<a class="back" href="../../">&lsaquo; Web Tools</a>
+<div id="plasmid-dilution">
+  <header class="app-head">
+    <h1 class="app-title">Plasmid Dilution Calculator</h1>
+    <div class="actions">
+      <span class="status" id="file-status"></span>
+      <button type="button" class="btn" id="import-data">Import</button>
+      <button type="button" class="btn" id="export-data">Export</button>
+      <input type="file" id="import-file" accept=".json,application/json" hidden>
+    </div>
+  </header>
+
+  <div class="top">
+    <div class="panel">
+      <h3>Plasmid</h3>
+      <div class="form">
+        <label for="sample-no">Plasmid name</label>
+        <input type="text" id="sample-no" data-key="sampleNo">
+        <label for="date">Date</label>
+        <input type="date" id="date" data-key="date">
+        <label for="insert-bp">Insert length</label>
+        <div class="field"><input type="number" id="insert-bp" data-key="insertBp" min="0" step="1"><span class="unit">bp</span></div>
+        <label for="vector-preset">Vector</label>
+        <select id="vector-preset" aria-label="vector preset">
+          <option value="">Custom (enter length)</option>
+          <optgroup label="Promega">
+            <option value="3015">pGEM-T Easy vector (3015 bp)</option>
+            <option value="3000">pGEM-T vector (3000 bp)</option>
+          </optgroup>
+          <optgroup label="Invitrogen">
+            <option value="3931">pCR2.1-TOPO (3931 bp)</option>
+            <option value="3973">pCRII-TOPO (3973 bp)</option>
+          </optgroup>
+        </select>
+        <label for="vector-bp">Vector length</label>
+        <div class="field"><input type="number" id="vector-bp" data-key="vectorBp" min="0" step="1"><span class="unit">bp</span></div>
+        <label>Full length</label>
+        <div class="field"><span class="computed" id="plasmid-bp">-</span><span class="unit">bp</span></div>
+        <label for="conc">Plasmid concentration</label>
+        <div class="field">
+          <input type="number" id="conc" data-key="conc" min="0" step="any">
+          <select class="unit-select" id="conc-unit" data-key="concUnit" aria-label="concentration unit">
+            <option value="ng">ng/µL</option>
+            <option value="ug">µg/µL</option>
+          </select>
+        </div>
+        <label for="top-exp">Max copy number</label>
+        <div class="field"><span class="pow">10^</span><input type="number" id="top-exp" data-key="topExp" step="1"><span class="unit">/ template</span></div>
+        <label for="stock-vol">Stock volume</label>
+        <div class="field"><input type="number" id="stock-vol" data-key="stockVol" min="0" step="any"><span class="unit">µL (used for tube ①)</span></div>
+        <div class="sep"></div>
+        <label for="template-vol" class="strong">Template volume for standard curve</label>
+        <div class="field"><input type="number" id="template-vol" data-key="templateVol" min="0" step="any"><span class="unit">µL / well</span></div>
+      </div>
+      <div class="warn-box" id="input-warn" hidden></div>
+    </div>
+
+    <div class="panel">
+      <h3>計算</h3>
+      <div class="metrics">
+        <div class="metric"><span>1分子の質量</span><strong id="m-mass">-</strong></div>
+        <div class="metric"><span>原液のコピー数</span><strong id="m-stock">-</strong></div>
+        <div class="metric"><span>①の希釈倍率</span><strong id="m-fold">-</strong></div>
+        <div class="metric"><span>①の調製</span><strong id="m-prep">-</strong></div>
+      </div>
+      <div class="steps" id="steps"></div>
+      <ol class="footnotes">
+        <li><span>*1</span><span>1 bp（塩基対）の平均分子量を 330 × 2 = 660 g/mol として計算しています。</span></li>
+        <li><span>*2</span><span>アボガドロ数 6.022 × 10²³ /mol</span></li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <h3>Dilution series</h3>
+      <div class="actions no-print">
+        <button type="button" class="btn" id="fill-10x">All 10×</button>
+        <button type="button" class="btn" id="add-step">Add tube</button>
+        <button type="button" class="btn" id="remove-step">Remove tube</button>
+        <button type="button" class="btn" id="copy-table">Copy</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="dilution-table" aria-label="dilution series">
+        <thead>
+          <tr>
+            <th>Tube</th>
+            <th style="text-align:left">Source</th>
+            <th>Source (µL)</th>
+            <th>DDW (µL)</th>
+            <th>Total (µL)</th>
+            <th>Dilution</th>
+            <th>Remaining (µL)</th>
+            <th>copies/µL</th>
+            <th id="per-template-head">copies/template</th>
+          </tr>
+        </thead>
+        <tbody id="series-body"></tbody>
+      </table>
+    </div>
+    <p class="note">Tube ① is calculated from the stock. From tube ② on, the source and DDW volumes are editable. Remaining is the volume left after taking the source for the next tube.</p>
+    <div class="status" id="copy-status"></div>
+    <textarea id="copy-fallback" class="no-print" readonly hidden aria-label="dilution series (manual copy)"></textarea>
+  </div>
+
+  <footer class="app-foot">
+    <div class="credit">Created with Claude | kamel</div>
+    <div class="actions">
+      <button type="button" class="btn text" id="reset">Reset</button>
+      <button type="button" class="btn primary" id="print-page">Print</button>
+    </div>
+  </footer>
+  <details class="changelog">
+    <summary>Changelog</summary>
+    <ul>
+      <li><span class="ver">v1.0</span><span class="date">2026/09/29</span><span>First web release (based on the Numbers sheet "plasmid希釈ソフト Ver.4")</span></li>
+    </ul>
+  </details>
+
+  <script>
+    (() => {
+      const root = document.getElementById("plasmid-dilution");
+      const $ = sel => root.querySelector(sel);
+      const AVOGADRO = 6.022e23;
+      const G_PER_MOL_PER_BP = 330 * 2;
+      const pad = n => String(n).padStart(2, "0");
+      const today = () => {
+        const d = new Date();
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      };
+      const defaults = () => ({
+        sampleNo: "",
+        date: today(),
+        insertBp: 0,
+        vectorBp: 6329,
+        conc: 2330,
+        concUnit: "ng",
+        templateVol: 5,
+        topExp: 10,
+        stockVol: 1,
+        // ②以降: 前の段から取る量と加えるDDWの量
+        steps: Array.from({ length: 7 }, () => ({ transfer: 10, diluent: 90 }))
+      });
+      let state = defaults();
+
+      // ---------- Formatting ----------
+      const supDigits = { "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+      const sup = n => String(n).split("").map(c => supDigits[c] || c).join("");
+      // 3.00×10⁵ のような指数表記。ちょうど10のべき乗なら 10¹⁰ と表示する
+      const sci = (v, digits = 3) => {
+        if (!Number.isFinite(v)) return "-";
+        if (v === 0) return "0";
+        let exp = Math.floor(Math.log10(Math.abs(v)));
+        let mant = v / 10 ** exp;
+        if (Math.abs(Number(mant.toPrecision(digits))) >= 10) { exp += 1; mant /= 10; }
+        const m = Number(mant.toPrecision(digits));
+        if (Math.abs(m - 1) < 1e-9) return `10${sup(exp)}`;
+        return `${m.toFixed(digits - 1)}×10${sup(exp)}`;
+      };
+      // 表計算ソフト向けの 3.00E+05 形式
+      const sciPlain = v => Number.isFinite(v) ? v.toExponential(2).toUpperCase().replace(/E\+?/, "E+").replace("E+-", "E-") : "";
+      const num = (v, max = 2) => Number.isFinite(v) ? v.toLocaleString("en-US", { maximumFractionDigits: max }) : "-";
+      const vol = v => Number.isFinite(v) ? v.toLocaleString("en-US", { maximumFractionDigits: v < 10 ? 2 : 1 }) : "-";
+      const vol1 = v => Number.isFinite(v) ? v.toFixed(1) : "-";
+      const circled = i => String.fromCharCode(0x2460 + i);
+
+      // ---------- Calculation ----------
+      function compute() {
+        const s = state;
+        const bp = (Number(s.insertBp) || 0) + (Number(s.vectorBp) || 0);
+        const mw = bp * G_PER_MOL_PER_BP;                         // g/mol
+        const gPerMolecule = mw / AVOGADRO;                        // g/分子
+        const topCopies = 10 ** s.topExp;
+        const pgPerTop = gPerMolecule * topCopies * 1e12;          // pg / 10^topExp copies
+        const pgPerUl = s.conc * (s.concUnit === "ug" ? 1e6 : 1e3); // pg/µL
+        const stockCopiesPerUl = pgPerUl / (gPerMolecule * 1e12);
+        const foldPerUl = pgPerUl / pgPerTop;                      // 10^topExp copies/µL にする倍率
+        const fold1 = foldPerUl * s.templateVol;                   // 10^topExp copies/template にする倍率
+        const valid = bp > 0 && s.conc > 0 && s.templateVol > 0 && s.stockVol > 0 && Number.isFinite(s.topExp);
+
+        const rows = [];
+        if (valid) {
+          const total1 = s.stockVol * fold1;
+          rows.push({ transfer: s.stockVol, diluent: total1 - s.stockVol, total: total1, fold: fold1, perUl: topCopies / s.templateVol });
+          s.steps.forEach(step => {
+            const prev = rows[rows.length - 1];
+            const t = Number(step.transfer), d = Number(step.diluent);
+            const total = t + d;
+            const fold = t > 0 ? total / t : NaN;
+            rows.push({ transfer: t, diluent: d, total, fold, perUl: prev.perUl / fold });
+          });
+          rows.forEach((row, i) => {
+            const next = rows[i + 1];
+            row.remain = row.total - (next ? next.transfer : 0);
+            row.perTemplate = row.perUl * s.templateVol;
+          });
+        }
+        return { bp, mw, gPerMolecule, topCopies, pgPerTop, pgPerUl, stockCopiesPerUl, foldPerUl, fold1, valid, rows };
+      }
+
+      // ---------- Rendering ----------
+      function syncPreset() {
+        const preset = [...$("#vector-preset").options].find(o => o.value && Number(o.value) === Number(state.vectorBp));
+        $("#vector-preset").value = preset ? preset.value : "";
+      }
+      function syncInputs() {
+        root.querySelectorAll("[data-key]").forEach(el => {
+          const v = state[el.dataset.key];
+          el.value = (v === undefined || Number.isNaN(v)) ? "" : v;
+        });
+        syncPreset();
+      }
+
+      function renderSeries(r) {
+        const body = $("#series-body");
+        body.textContent = "";
+        $("#per-template-head").innerHTML = `copies/<span class="red">${num(state.templateVol)} µL</span>`;
+        r.rows.forEach((row, i) => {
+          const tr = document.createElement("tr");
+          const prev = r.rows[i - 1];
+          const tooSmall = i === 0 && row.fold < 1;
+          const shortage = prev && prev.remain < 0;
+          if (tooSmall || shortage || !Number.isFinite(row.fold)) tr.className = "bad-row";
+
+          const cell = (content, cls) => {
+            const td = document.createElement("td");
+            if (cls) td.className = cls;
+            if (content instanceof Node) td.append(content); else td.textContent = content;
+            tr.append(td);
+            return td;
+          };
+          const tube = document.createElement("span");
+          tube.className = "tube";
+          tube.textContent = i + 1;
+          cell(tube);
+          cell(i === 0 ? "Stock" : `from ${circled(i - 1)}`, "src");
+          if (i === 0) {
+            cell(vol1(row.transfer));
+            cell(vol1(row.diluent));
+          } else {
+            ["transfer", "diluent"].forEach(key => {
+              const input = document.createElement("input");
+              input.type = "number";
+              input.min = "0";
+              input.step = "any";
+              input.value = state.steps[i - 1][key];
+              input.setAttribute("aria-label", `${circled(i)} ${key === "transfer" ? "source" : "DDW"} (µL)`);
+              input.addEventListener("input", () => {
+                state.steps[i - 1][key] = input.value === "" ? NaN : Number(input.value);
+                update(false);
+              });
+              cell(input);
+            });
+          }
+          cell(i === 0 ? vol1(row.total) : vol(row.total));
+          cell(i === 0 ? `${vol1(row.fold)}×` : Number.isFinite(row.fold) ? `${num(row.fold, 1)}×` : "-");
+          const remainCell = cell(i === 0 ? vol1(row.remain) : vol(row.remain));
+          if (row.remain < 0) remainCell.classList.add("bad");
+          cell(sci(row.perUl));
+          cell(sci(row.perTemplate), "copies");
+          body.append(tr);
+        });
+      }
+
+      // ②以降の入力欄はフォーカスを保つため、値の変更時は作り直さずに表示だけ更新する
+      function refreshSeries(r) {
+        const trs = $("#series-body").children;
+        r.rows.forEach((row, i) => {
+          const tds = trs[i].children;
+          const prev = r.rows[i - 1];
+          trs[i].className = ((i === 0 && row.fold < 1) || (prev && prev.remain < 0) || !Number.isFinite(row.fold)) ? "bad-row" : "";
+          if (i === 0) { tds[2].textContent = vol1(row.transfer); tds[3].textContent = vol1(row.diluent); }
+          tds[4].textContent = i === 0 ? vol1(row.total) : vol(row.total);
+          tds[5].textContent = i === 0 ? `${vol1(row.fold)}×` : Number.isFinite(row.fold) ? `${num(row.fold, 1)}×` : "-";
+          tds[6].textContent = i === 0 ? vol1(row.remain) : vol(row.remain);
+          tds[6].classList.toggle("bad", row.remain < 0);
+          tds[7].textContent = sci(row.perUl);
+          tds[8].textContent = sci(row.perTemplate);
+        });
+      }
+
+      function renderCalc(r) {
+        const s = state;
+        const ok = r.valid;
+        $("#plasmid-bp").textContent = r.bp > 0 ? num(r.bp, 0) : "-";
+        $("#m-mass").innerHTML = ok ? `${sci(r.gPerMolecule)} <small>g</small>` : "-";
+        $("#m-stock").innerHTML = ok ? `${sci(r.stockCopiesPerUl)} <small>/µL</small>` : "-";
+        $("#m-fold").innerHTML = ok ? `${r.fold1.toFixed(1)} <small>倍</small>` : "-";
+        $("#m-prep").innerHTML = ok ? `${vol1(s.stockVol)} + ${vol1(r.fold1 * s.stockVol - s.stockVol)} <small>µL</small>` : "-";
+
+        const top = `10${sup(s.topExp)}`;
+        const tv = `${num(s.templateVol)} µL`;
+        const unit = s.concUnit === "ug" ? "µg" : "ng";
+        // 文字列は説明の行、配列は [左辺, 右辺] の式の行（= で揃える）、{ last } は結論の行
+        const rows = [
+          "Plasmid 1分子の質量は",
+          [`${num(Number(s.insertBp) || 0, 0)} + ${num(Number(s.vectorBp) || 0, 0)} bp`, `<b>${num(r.bp, 0)} bp</b>（Plasmid全長）`],
+          [`${num(r.bp, 0)} bp × 330 × 2<span class="fn-ref">*1</span>`, `<b>${num(r.mw, 0)} g/mol</b>`],
+          [`${num(r.mw, 0)} g/mol ÷ 6.022×10²³<span class="fn-ref">*2</span>`, `<b>${sci(r.gPerMolecule)} g/分子</b>`],
+          `${top} copies を得るためには`,
+          [`${sci(r.gPerMolecule)} g/分子 × ${top}`, `<b>${sci(r.gPerMolecule * r.topCopies)} g / ${top} copies</b>`],
+          [`× 10¹²`, `<b>${num(r.pgPerTop, 1)} pg / ${top} copies</b>`],
+          `濃度 ${num(s.conc, 4)} ${unit}/µL を pg/µL にすると`,
+          [`${num(s.conc, 4)} ${unit}/µL × ${s.concUnit === "ug" ? "10⁶" : "10³"}`, `<b>${num(r.pgPerUl, 0)} pg/µL</b>`],
+          `${top} copies/µL にするには`,
+          [`${num(r.pgPerUl, 0)} pg/µL ÷ ${num(r.pgPerTop, 1)} pg`, `<b>${num(r.foldPerUl, 2)} 倍</b>希釈`],
+          `テンプレート（${tv}）中に ${top} copies 含めるには`,
+          [`${num(r.foldPerUl, 2)} 倍 × ${num(s.templateVol)}`, `<b>${r.fold1.toFixed(1)} 倍</b>希釈`],
+          { last: `${r.fold1.toFixed(1)} 倍希釈すると、${tv} の中に ${top} copies が含まれる。` }
+        ];
+        $("#steps").innerHTML = !ok ? "" : rows.map(row => typeof row === "string"
+          ? `<span class="caption">${row}</span>`
+          : row.last ? `<span class="caption last">${row.last}</span>`
+          : `<span class="lhs">${row[0]}</span><span class="eq">=</span><span>${row[1]}</span>`).join("");
+
+        const warn = [];
+        if (!ok) warn.push("Enter positive values for full length, plasmid concentration, stock volume and template volume.");
+        else {
+          if (r.fold1 > 10000) warn.push("The dilution for tube ① is too large. Pre-dilute the stock or raise the max copy number.");
+          if (r.fold1 < 1) warn.push(`The stock is too dilute to reach ${top} copies/template. Lower the max copy number.`);
+          if (s.stockVol < 1) warn.push("Stock volume is below 1 µL. Watch out for pipetting error.");
+          if (r.rows.some((row, i) => i > 0 && !Number.isFinite(row.fold))) warn.push("A tube has a source volume of 0 or blank.");
+          if (r.rows.some(row => row.remain < 0)) warn.push("A tube does not have enough volume for the next step (remaining shown in red).");
+        }
+        $("#input-warn").hidden = warn.length === 0;
+        $("#input-warn").textContent = warn.join(" ");
+      }
+
+      let last;
+      function update(rebuild = true) {
+        last = compute();
+        renderCalc(last);
+        if (rebuild || $("#series-body").children.length !== last.rows.length) renderSeries(last);
+        else refreshSeries(last);
+      }
+
+      // ---------- Inputs ----------
+      root.querySelectorAll("[data-key]").forEach(el => {
+        el.addEventListener("input", () => {
+          const key = el.dataset.key;
+          state[key] = (el.type === "number") ? (el.value === "" ? NaN : Number(el.value)) : el.value;
+          if (key === "vectorBp") syncPreset();
+          update(key === "templateVol" || key === "topExp");
+        });
+      });
+      $("#vector-preset").addEventListener("change", e => {
+        if (!e.target.value) return;
+        state.vectorBp = Number(e.target.value);
+        syncInputs();
+        update();
+      });
+      $("#fill-10x").addEventListener("click", () => {
+        state.steps = state.steps.map(() => ({ transfer: 10, diluent: 90 }));
+        update();
+      });
+      $("#add-step").addEventListener("click", () => {
+        const lastStep = state.steps[state.steps.length - 1] || { transfer: 10, diluent: 90 };
+        state.steps.push({ ...lastStep });
+        update();
+      });
+      $("#remove-step").addEventListener("click", () => {
+        if (state.steps.length === 0) return;
+        state.steps.pop();
+        update();
+      });
+      $("#reset").addEventListener("click", () => {
+        state = defaults();
+        syncInputs();
+        update();
+      });
+      $("#print-page").addEventListener("click", () => window.print());
+
+      // ---------- Copy (TSV) ----------
+      $("#copy-table").addEventListener("click", async () => {
+        const status = $("#copy-status");
+        const fallback = $("#copy-fallback");
+        if (!last.valid) { status.textContent = "Nothing to copy"; return; }
+        const header = ["Tube", "Source", "Source(uL)", "DDW(uL)", "Total(uL)", "Dilution", "Remaining(uL)", "copies/uL", `copies/${state.templateVol}uL`];
+        const lines = [header, ...last.rows.map((row, i) => [
+          circled(i), i === 0 ? "Stock" : circled(i - 1),
+          Number(row.transfer.toFixed(2)), Number(row.diluent.toFixed(2)), Number(row.total.toFixed(2)),
+          Number(row.fold.toFixed(2)), Number(row.remain.toFixed(2)),
+          sciPlain(row.perUl), sciPlain(row.perTemplate)
+        ])].map(cols => cols.join("\t")).join("\n");
+        try {
+          await navigator.clipboard.writeText(lines);
+          fallback.hidden = true;
+          status.textContent = "Copied (paste into Excel / Numbers)";
+        } catch {
+          fallback.value = lines;
+          fallback.hidden = false;
+          fallback.select();
+          status.textContent = "Could not copy automatically. Copy from the box below.";
+        }
+      });
+
+      // ---------- Export / Import ----------
+      // JSON has no NaN, so blank numbers are written as null and read back as NaN.
+      const fileFormat = "plasmid-dilution-calculator";
+      const numberKeys = ["insertBp", "vectorBp", "conc", "templateVol", "topExp", "stockVol"];
+      const toNum = v => (v === null || v === undefined || v === "") ? NaN : Number(v);
+      const orNull = v => Number.isFinite(v) ? v : null;
+      const setFileStatus = text => {
+        const status = $("#file-status");
+        status.textContent = text;
+        window.setTimeout(() => { if (status.textContent === text) status.textContent = ""; }, 4000);
+      };
+      $("#export-data").addEventListener("click", () => {
+        const data = { format: fileFormat, version: 1, savedAt: new Date().toISOString() };
+        Object.keys(state).forEach(key => { if (key !== "steps") data[key] = numberKeys.includes(key) ? orNull(state[key]) : state[key]; });
+        data.steps = state.steps.map(s => ({ transfer: orNull(s.transfer), diluent: orNull(s.diluent) }));
+        const d = new Date();
+        const safe = String(state.sampleNo || "plasmid").replace(/[\\/:*?"<>|\s]+/g, "_");
+        const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${safe}_dilution.json`;
+        document.body.append(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        setFileStatus("Exported");
+      });
+      $("#import-data").addEventListener("click", () => $("#import-file").click());
+      $("#import-file").addEventListener("change", async event => {
+        const input = event.target;
+        const file = input.files[0];
+        input.value = ""; // allow re-importing the same file
+        if (!file) return;
+        try {
+          const data = JSON.parse(await file.text());
+          if (data?.format !== fileFormat || !Array.isArray(data.steps)) throw new Error("format");
+          const next = defaults();
+          ["sampleNo", "date"].forEach(key => { next[key] = String(data[key] ?? ""); });
+          numberKeys.forEach(key => { next[key] = toNum(data[key]); });
+          next.concUnit = data.concUnit === "ug" ? "ug" : "ng";
+          next.steps = data.steps.map(s => ({ transfer: toNum(s.transfer), diluent: toNum(s.diluent) }));
+          state = next;
+          syncInputs();
+          update();
+          setFileStatus(`Imported ${file.name}`);
+        } catch {
+          setFileStatus("Import failed: not a Plasmid Dilution Calculator file");
+        }
+      });
+
+      syncInputs();
+      update();
+    })();
+  </script>
+</div>
+</body>
+</html>
