@@ -181,7 +181,102 @@
   tbody tr:last-child td { border-bottom: 0; }
   tfoot th { color: var(--ink); font-size: 13px; font-weight: 600; }
   tr.thick-bottom th, tr.thick-bottom td { border-bottom: 1.5px solid var(--muted); }
+  tr.thick-top th, tr.thick-top td { border-top: 1.5px solid var(--muted); }
   tfoot tr:last-child th { border-bottom: 0; }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    padding: 6px 16px;
+    border: 0;
+    border-radius: 980px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .btn:hover { background: var(--fill-strong); }
+  .btn:active { opacity: 0.7; }
+  .btn:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 1px; }
+  .btn:disabled { opacity: 0.35; cursor: default; }
+  .btn:disabled:hover { background: var(--accent-soft); }
+  .btn.icon { width: 28px; height: 28px; padding: 0; font-size: 16px; line-height: 28px; }
+  .table-actions { margin-top: 16px; }
+  .warn { color: var(--bad); }
+
+  /* ---------- Enzyme digestion ---------- */
+  #digest td:last-child, #digest th:last-child { width: 28px; text-align: right; }
+
+  /* ---------- Copy / Print ---------- */
+  .record-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+  .record-actions .copy-status { color: var(--muted); font-size: 12px; }
+  .copy-fallback {
+    display: block;
+    width: 100%;
+    height: 120px;
+    margin-top: 8px;
+    font: 12px ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .copy-fallback[hidden] { display: none; }
+  .print-date { display: none; }
+
+  /* ---------- Print: A4 portrait, one page ---------- */
+  @page { size: A4 portrait; margin: 12mm; }
+  @media print {
+    :root {
+      --bg: #fff; --card: #fff; --ink: #1d1d1f; --muted: #6e6e73;
+      --line: rgba(0, 0, 0, 0.14); --fill: transparent; --fill-strong: transparent;
+      --accent-soft: transparent; --bad: #d70015; --shadow: none;
+    }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    html, body { background: #fff; font-size: 11px; }
+    body { max-width: none; margin: 0; padding: 0; }
+    .pageheader {
+      position: static;
+      padding: 0 0 6px;
+      margin-bottom: 10px;
+      background: none;
+      border-bottom: 1.5px solid var(--ink);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+    .pageheader h1 { font-size: 18px; }
+    .pageheader p.lead { display: none; }
+    .print-date { display: block; margin: 2px 0 0; color: var(--muted); font-size: 11px; }
+    .back, .sidenav, .no-print, .record-actions, .copy-fallback,
+    [data-role="remove"], #dg-add { display: none !important; }
+    section { margin: 0; padding: 0; border-radius: 0; box-shadow: none; break-inside: avoid; }
+    section h2 { font-size: 15px; margin-bottom: 8px; }
+    .row { margin-bottom: 4px; }
+    .row label { color: var(--ink); font-size: 11px; }
+    table { font-size: 11px; }
+    th, td { padding: 4px 8px; }
+    tr { break-inside: avoid; }
+    input[type="number"], input[type="text"], select {
+      width: auto;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+      box-shadow: none;
+      color: inherit;
+      font: inherit;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    select { background-image: none; padding-right: 0; }
+    #dg-warning:empty { display: none; }
+  }
 
   @media (max-width: 700px) {
     body { margin: 0 auto 4rem; padding: calc(var(--header-h) + 0.5rem) 1rem 0; }
@@ -209,12 +304,14 @@
     <a class="back" href="../../">&lsaquo; Web Tools</a>
     <h1>Reagent Calculator</h1>
     <p class="lead">試薬調製・希釈・DNAモル濃度・PCRマスターミックス計算 / Reagent preparation, dilution, DNA molarity, and PCR master mix calculators</p>
+    <p class="print-date" id="print-date"></p>
   </header>
   <nav class="sidenav" aria-label="Sections">
     <a href="#molar">Molar Solution<small>溶液調製</small></a>
     <a href="#dilution">Dilution<small>希釈</small></a>
     <a href="#dnamol">DNA Molarity<small>DNAモル濃度</small></a>
     <a href="#mastermix">PCR Master Mix<small>PCRマスターミックス</small></a>
+    <a href="#digest">Enzyme Digestion<small>制限酵素反応</small></a>
   </nav>
 
   <section id="molar">
@@ -353,6 +450,81 @@
         </tr>
       </tfoot>
     </table>
+    <div class="record-actions">
+      <button type="button" class="btn" data-action="copy">Copy</button>
+      <button type="button" class="btn" data-action="print">Print</button>
+      <span class="copy-status" role="status"></span>
+    </div>
+    <textarea class="copy-fallback" readonly hidden aria-label="コピー用テキスト / text to copy"></textarea>
+  </section>
+
+  <section id="digest">
+    <h2>Enzyme Digestion 制限酵素反応</h2>
+    <p class="note">酵素量は表に1反応あたりの液量(µL)を直接入力します。Bufferの量は最終濃度が1×になるように、Waterは反応液量から自動計算されます。DNAはmaster mixに含めず、各チューブへ個別に添加します。<br>Enter enzyme volume per reaction (µL) directly in the table. Buffer is diluted to 1× and water fills the reaction volume. DNA is excluded from the master mix and added to each tube individually.</p>
+    <div class="row">
+      <label for="dg-samples">Number of reactions 反応数</label>
+      <input type="number" id="dg-samples" value="4" step="any">
+    </div>
+    <div class="row">
+      <label for="dg-extra">Extra volume 余分 (%)</label>
+      <input type="number" id="dg-extra" value="10" step="any">
+    </div>
+    <div class="row">
+      <label for="dg-dna-amount">DNA amount/reaction DNA量 (µg)</label>
+      <input type="number" id="dg-dna-amount" value="1" step="any">
+    </div>
+    <div class="row">
+      <label for="dg-dna-conc">DNA concentration DNA濃度 (ng/µL)</label>
+      <input type="number" id="dg-dna-conc" value="200" step="any">
+    </div>
+    <div class="row">
+      <label for="dg-buffer-x">Buffer stock バッファー濃度 (×)</label>
+      <input type="number" id="dg-buffer-x" value="10" step="any">
+    </div>
+    <div class="row">
+      <label for="dg-total-vol">Total volume/reaction 反応液量 (µL)</label>
+      <input type="number" id="dg-total-vol" value="50" step="any">
+    </div>
+
+    <table style="margin-top:28px">
+      <thead>
+        <tr><th>Reagent 試薬</th><th>Per reaction 1反応あたり (µL)</th><th>Master mix total 合計 (µL)</th><th></th></tr>
+      </thead>
+      <tbody id="dg-summary">
+        <tr id="dg-buffer-row"><td data-role="label"></td><td data-role="vol">–</td><td data-role="total">–</td><td></td></tr>
+        <tr id="dg-water-row"><td>Water</td><td data-role="vol">–</td><td data-role="total">–</td><td></td></tr>
+      </tbody>
+      <tfoot>
+        <tr class="thick-top">
+          <th>Master mix TOTAL</th>
+          <th id="dg-mm-per">–</th>
+          <th id="dg-mm-all">–</th>
+          <th></th>
+        </tr>
+        <tr class="thick-bottom">
+          <th>DNA</th>
+          <th id="dg-dna-per">–</th>
+          <th></th>
+          <th></th>
+        </tr>
+        <tr class="thick-top">
+          <th>Total</th>
+          <th id="dg-out-total">–</th>
+          <th></th>
+          <th></th>
+        </tr>
+      </tfoot>
+    </table>
+    <div class="table-actions">
+      <button type="button" class="btn" id="dg-add">+ Add enzyme 酵素を追加</button>
+    </div>
+    <p class="note" id="dg-warning"></p>
+    <div class="record-actions">
+      <button type="button" class="btn" data-action="copy">Copy</button>
+      <button type="button" class="btn" data-action="print">Print</button>
+      <span class="copy-status" role="status"></span>
+    </div>
+    <textarea class="copy-fallback" readonly hidden aria-label="コピー用テキスト / text to copy"></textarea>
   </section>
 
 <script>
@@ -508,10 +680,110 @@
   mmRows.addEventListener('input', updateMasterMix);
   [mmSamples, mmTemplateVol, mmExtra, mmTotalVol].forEach(el => el.addEventListener('input', updateMasterMix));
 
+  // Enzyme Digestion
+  const dgSamples = document.getElementById('dg-samples');
+  const dgExtra = document.getElementById('dg-extra');
+  const dgDnaAmount = document.getElementById('dg-dna-amount');
+  const dgDnaConc = document.getElementById('dg-dna-conc');
+  const dgBufferX = document.getElementById('dg-buffer-x');
+  const dgTotalVol = document.getElementById('dg-total-vol');
+  const dgSummary = document.getElementById('dg-summary');
+  const dgBufferRow = document.getElementById('dg-buffer-row');
+  const dgWaterRow = document.getElementById('dg-water-row');
+  const dgAdd = document.getElementById('dg-add');
+  const dgMmPer = document.getElementById('dg-mm-per');
+  const dgMmAll = document.getElementById('dg-mm-all');
+  const dgDnaPer = document.getElementById('dg-dna-per');
+  const dgOutTotal = document.getElementById('dg-out-total');
+  const dgWarning = document.getElementById('dg-warning');
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // 酵素行は Water 行の直前に挿入する
+  function addEnzymeRow(vol) {
+    const tr = document.createElement('tr');
+    const n = dgSummary.querySelectorAll('tr[data-role="enzyme"]').length + 1;
+    tr.dataset.role = 'enzyme';
+    tr.innerHTML =
+      '<td><input type="text" class="name" data-role="name" value="Enzyme ' + n + '"></td>' +
+      '<td><input type="number" data-role="vol" value="' + vol + '" step="any"></td>' +
+      '<td data-role="total">–</td>' +
+      '<td><button type="button" class="btn icon" data-role="remove" aria-label="Remove 削除" title="Remove 削除">×</button></td>';
+    dgSummary.insertBefore(tr, dgWaterRow);
+  }
+
+  function updateDigest() {
+    const enzymeRows = Array.from(dgSummary.querySelectorAll('tr[data-role="enzyme"]'));
+    const factor = num(dgSamples) * (1 + num(dgExtra) / 100);
+    const dnaUg = num(dgDnaAmount);
+    const dnaConc = num(dgDnaConc);
+    const bufferX = num(dgBufferX);
+    const totalVol = num(dgTotalVol);
+
+    const dnaVol = dnaConc > 0 ? dnaUg * 1000 / dnaConc : 0;
+    const bufferVol = bufferX > 0 ? totalVol / bufferX : 0;
+
+    dgBufferRow.querySelector('[data-role="label"]').textContent = 'Buffer (' + round(bufferX, 2) + '×)';
+    dgBufferRow.querySelector('[data-role="vol"]').textContent = round(bufferVol, 2);
+    dgBufferRow.querySelector('[data-role="total"]').textContent = round(bufferVol * factor, 2);
+
+    let enzymeSum = 0;
+    enzymeRows.forEach(tr => {
+      const vol = parseFloat(tr.querySelector('[data-role="vol"]').value) || 0;
+      enzymeSum += vol;
+      tr.querySelector('[data-role="total"]').textContent = round(vol * factor, 2);
+      tr.querySelector('[data-role="remove"]').disabled = enzymeRows.length <= 1;
+    });
+
+    const waterRaw = totalVol - dnaVol - bufferVol - enzymeSum;
+    const water = Math.max(waterRaw, 0);
+    const waterVolCell = dgWaterRow.querySelector('[data-role="vol"]');
+    const waterTotalCell = dgWaterRow.querySelector('[data-role="total"]');
+    waterVolCell.textContent = round(water, 2);
+    waterTotalCell.textContent = round(water * factor, 2);
+    waterVolCell.classList.toggle('warn', waterRaw < 0);
+    waterTotalCell.classList.toggle('warn', waterRaw < 0);
+
+    const mmPer = bufferVol + enzymeSum + water;
+    dgMmPer.textContent = round(mmPer, 2);
+    dgMmAll.textContent = round(mmPer * factor, 2);
+    dgDnaPer.textContent = round(dnaVol, 2);
+    dgOutTotal.textContent = round(mmPer + dnaVol, 2);
+
+    // 酵素はグリセロール50%保存なので、酵素液の合計は反応液量の10%以下（グリセロール終濃度5%以下）に抑える
+    const messages = [];
+    if (waterRaw < 0) {
+      messages.push('反応液量が不足しています。反応液量を増やすか、DNAを濃くしてください。 / Total volume is too small for DNA, buffer and enzymes.');
+    }
+    if (totalVol > 0 && enzymeSum > totalVol * 0.1) {
+      messages.push('酵素の合計が反応液量の10%を超えています（グリセロール終濃度 > 5%）。スター活性に注意してください。 / Enzymes exceed 10% of the reaction volume (glycerol > 5%); risk of star activity.');
+    }
+    dgWarning.innerHTML = messages.map(escapeHtml).join('<br>');
+    dgWarning.classList.toggle('warn', messages.length > 0);
+  }
+
+  addEnzymeRow(1);
+  dgAdd.addEventListener('click', () => {
+    addEnzymeRow(1);
+    updateDigest();
+    dgWaterRow.previousElementSibling.querySelector('[data-role="vol"]').focus();
+  });
+  dgSummary.addEventListener('input', updateDigest);
+  dgSummary.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-role="remove"]');
+    if (!btn || btn.disabled) return;
+    btn.closest('tr').remove();
+    updateDigest();
+  });
+  [dgSamples, dgExtra, dgDnaAmount, dgDnaConc, dgBufferX, dgTotalVol].forEach(el => el.addEventListener('input', updateDigest));
+
   updateMolar();
   updateDilution();
   updateDna();
   updateMasterMix();
+  updateDigest();
 
   // Sidebar nav active state
   const navLinks = Array.from(document.querySelectorAll('.sidenav a'));
@@ -523,16 +795,106 @@
     navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
   }
 
-  if ('IntersectionObserver' in window && navSections.length) {
-    const observer = new IntersectionObserver((entries) => {
-      const visible = entries.filter(e => e.isIntersecting);
-      if (visible.length) {
-        visible.sort((a, b) => Math.abs(a.boundingClientRect.top) - Math.abs(b.boundingClientRect.top));
-        setActive(visible[0].target.id);
-      }
-    }, { rootMargin: '-10% 0px -70% 0px' });
-    navSections.forEach(sec => observer.observe(sec));
+  // Show only the section selected in the sidebar
+  function showSection(id) {
+    if (!navSections.some(sec => sec.id === id)) id = navSections[0].id;
+    navSections.forEach(sec => { sec.hidden = sec.id !== id; });
+    setActive(id);
   }
+
+  navLinks.forEach(a => a.addEventListener('click', (e) => {
+    e.preventDefault();
+    const id = a.getAttribute('href').slice(1);
+    history.replaceState(null, '', '#' + id);
+    showSection(id);
+    window.scrollTo(0, 0);
+  }));
+  window.addEventListener('hashchange', () => showSection(location.hash.slice(1)));
+
+  if (navSections.length) showSection(location.hash.slice(1));
+
+  // Copy / Print for lab notebook records
+  function nowStamp() {
+    const d = new Date();
+    const p2 = v => String(v).padStart(2, '0');
+    return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+  }
+
+  function cellText(cell) {
+    const input = cell.querySelector('input, select');
+    if (!input) return cell.textContent.trim();
+    return input.tagName === 'SELECT' ? input.options[input.selectedIndex].textContent : input.value;
+  }
+
+  // 条件（.row）と表をタブ区切りテキストにする。Excelや電子実験ノートにそのまま貼り付けられる
+  function sectionToText(section) {
+    const lines = [section.querySelector('h2').textContent.trim() + '\t' + nowStamp(), ''];
+    section.querySelectorAll('.row').forEach(row => {
+      const label = row.querySelector('label').textContent.trim();
+      const values = Array.from(row.querySelectorAll('input, select')).map(el =>
+        el.tagName === 'SELECT' ? el.options[el.selectedIndex].textContent : el.value);
+      lines.push(label + '\t' + values.join(' '));
+    });
+    const table = section.querySelector('table');
+    if (table) {
+      lines.push('');
+      table.querySelectorAll('tr').forEach(tr => {
+        const cells = Array.from(tr.children)
+          .filter(c => !c.querySelector('[data-role="remove"]'))
+          .map(cellText);
+        while (cells.length && cells[cells.length - 1] === '') cells.pop();
+        if (cells.length) lines.push(cells.join('\t'));
+      });
+    }
+    const warning = section.querySelector('#dg-warning');
+    if (warning && warning.textContent.trim()) {
+      lines.push('', warning.innerText.trim());
+    }
+    return lines.join('\n');
+  }
+
+  async function copyText(text) {
+    if (window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (err) { /* fall through */ }
+    }
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.top = '-1000px';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+    textarea.remove();
+    return ok;
+  }
+
+  document.querySelectorAll('.record-actions').forEach(bar => {
+    const section = bar.closest('section');
+    const status = bar.querySelector('.copy-status');
+    const fallback = section.querySelector('.copy-fallback');
+    bar.querySelector('[data-action="copy"]').addEventListener('click', async () => {
+      const text = sectionToText(section);
+      if (await copyText(text)) {
+        status.textContent = 'クリップボードにコピーしました / Copied';
+        fallback.hidden = true;
+      } else {
+        status.textContent = '自動コピーできませんでした。下の欄からコピーしてください / Copy manually below';
+        fallback.value = text;
+        fallback.hidden = false;
+        fallback.focus();
+        fallback.select();
+      }
+    });
+    bar.querySelector('[data-action="print"]').addEventListener('click', () => window.print());
+  });
+
+  const printDate = document.getElementById('print-date');
+  window.addEventListener('beforeprint', () => { printDate.textContent = 'Printed 印刷日時: ' + nowStamp(); });
 
   // Keep --header-h in sync with the actual fixed header height
   const pageHeader = document.querySelector('.pageheader');
