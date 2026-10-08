@@ -1,0 +1,957 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>In Vivo AAV Calculator</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --ink: #1d1d1f;
+    --muted: #6e6e73;
+    --line: rgba(0, 0, 0, 0.08);
+    --fill: #f5f5f7;
+    --fill-strong: #e8e8ed;
+    --accent: #0071e3;
+    --accent-hover: #0077ed;
+    --accent-soft: rgba(0, 113, 227, 0.1);
+    --warn: #ff9500;
+    --bad: #d70015;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Segoe UI", sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --card: #1c1c1e;
+      --ink: #f5f5f7;
+      --muted: #98989d;
+      --line: rgba(255, 255, 255, 0.12);
+      --fill: #2c2c2e;
+      --fill-strong: #3a3a3c;
+      --accent: #2997ff;
+      --accent-hover: #4aa8ff;
+      --accent-soft: rgba(41, 151, 255, 0.16);
+      --warn: #ff9f0a;
+      --bad: #ff453a;
+      --shadow: none;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .back {
+    display: block;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 20px 24px 0;
+    color: var(--accent);
+    font-size: 13px;
+    text-decoration: none;
+  }
+  .back:hover { text-decoration: underline; }
+
+  #aav-dilution {
+    display: grid;
+    gap: 16px;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 12px 24px 40px;
+  }
+
+  /* ---------- Header ---------- */
+  .app-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px 16px;
+    padding: 8px 4px 12px;
+  }
+  .app-head .actions { margin: 0; }
+  .app-head .status { min-height: 0; margin: 0; }
+  .app-title {
+    margin: 0;
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+  }
+
+  /* ---------- Layout ---------- */
+  .top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
+  }
+  .panel {
+    min-width: 0;
+    padding: 20px 22px;
+    border-radius: 20px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+  h3 {
+    margin: 0 0 14px;
+    font-size: 19px;
+    font-weight: 650;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+  .panel-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+    margin-bottom: 14px;
+  }
+  .panel-header h3 { margin: 0; }
+  .panel-header .actions { margin: 0; }
+
+  /* ---------- Form ---------- */
+  .form {
+    display: grid;
+    grid-template-columns: 148px minmax(0, 1fr);
+    gap: 8px 12px;
+    align-items: center;
+  }
+  .form label { color: var(--muted); font-size: 13px; }
+  .form label.strong { color: var(--bad); font-weight: 600; }
+  .form .sep { grid-column: 1 / -1; height: 1px; margin: 4px 0; background: var(--line); }
+  .field { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .field .unit { flex: 0 0 auto; color: var(--muted); font-size: 13px; }
+  .field input[type="number"] { max-width: 140px; }
+  .field select.unit-select { width: auto; flex: 0 0 auto; }
+  .field .pow { flex: 0 0 auto; color: var(--muted); font-size: 13px; }
+  .field .pow + input { max-width: 64px; }
+  .computed { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  input[type="number"],
+  input[type="text"],
+  input[type="date"],
+  select {
+    width: 100%;
+    min-width: 0;
+    padding: 5px 9px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: var(--fill);
+    color: var(--ink);
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+  select {
+    padding-right: 26px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2386868b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 9px center;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+  }
+  input:hover, select:hover { background-color: var(--fill-strong); }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    background-color: var(--card);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .status { min-height: 1.45em; margin-top: 8px; color: var(--muted); font-size: 12px; }
+  .note { margin-top: 10px; color: var(--muted); font-size: 12px; }
+  .warn-box {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(215, 0, 21, 0.08);
+    color: var(--bad);
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .warn-box[hidden] { display: none; }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .btn {
+    padding: 6px 16px;
+    border: 0;
+    border-radius: 980px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .btn:hover { background: var(--fill-strong); }
+  .btn:active { opacity: 0.7; }
+  .btn:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 1px; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.primary:hover { background: var(--accent-hover); }
+  .btn.text { background: transparent; }
+  .btn.text:hover { background: var(--accent-soft); }
+
+  /* ---------- Calculation steps ---------- */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .metric span { display: block; color: var(--muted); font-size: 12px; font-weight: 500; }
+  .metric strong {
+    display: block;
+    margin-top: 2px;
+    font-size: 22px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .metric small { color: var(--muted); font-size: 13px; font-weight: 500; }
+  /* 左辺・=・右辺の3列で、= の位置を縦に揃える */
+  .steps {
+    display: grid;
+    grid-template-columns: max-content max-content minmax(0, 1fr);
+    gap: 6px 8px;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .steps .lhs { text-align: right; }
+  .steps .eq { color: var(--muted); }
+  .steps b { color: var(--ink); font-weight: 600; }
+  .steps .caption { grid-column: 1 / -1; margin-top: 8px; color: var(--muted); font-size: 12px; }
+  .steps .caption:first-child { margin-top: 0; }
+  .steps .caption.last { margin-top: 2px; color: var(--ink); font-weight: 600; }
+  .steps .fn-ref { margin-left: 1px; color: var(--muted); font-size: 9px; vertical-align: super; line-height: 0; }
+  /* 註 */
+  ol.footnotes { margin: 14px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 11px; }
+  ol.footnotes li { display: flex; gap: 4px; }
+
+  /* ---------- Table ---------- */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  th, td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--line);
+    text-align: right;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  th { color: var(--muted); font-size: 12px; font-weight: 500; }
+  th:first-child, td:first-child { padding-left: 0; text-align: left; }
+  th:last-child, td:last-child { padding-right: 0; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td input[type="number"] { width: 76px; text-align: right; }
+  td.copies { font-weight: 650; }
+  td.src { color: var(--muted); text-align: left; }
+  tr.bad-row td { color: var(--bad); }
+  .bad { color: var(--bad); font-weight: 600; }
+  .red { color: var(--bad); }
+  .tube {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 650;
+  }
+
+  /* ---------- Footer ---------- */
+  .app-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 4px 0;
+  }
+  .credit { color: var(--muted); font-size: 12px; }
+  .app-foot .actions { margin: 0; }
+
+  .changelog { padding: 0 4px; color: var(--muted); font-size: 12px; }
+  .changelog summary { display: inline-block; cursor: pointer; list-style: none; user-select: none; }
+  .changelog summary::-webkit-details-marker { display: none; }
+  .changelog summary::before { content: "\25B8\00a0"; }
+  .changelog[open] summary::before { content: "\25BE\00a0"; }
+  .changelog summary:hover { color: var(--ink); }
+  .changelog ul { margin: 6px 0 0; padding: 0; list-style: none; }
+  .changelog li { display: flex; gap: 12px; margin-top: 4px; }
+  .changelog .ver { flex: 0 0 32px; font-variant-numeric: tabular-nums; }
+  .changelog .date { flex: 0 0 76px; font-variant-numeric: tabular-nums; }
+
+  #copy-fallback {
+    display: block;
+    width: 100%;
+    height: 90px;
+    margin-top: 8px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--fill);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  #copy-fallback[hidden] { display: none; }
+
+  @media (max-width: 760px) {
+    #aav-dilution { padding: 8px 16px 32px; }
+    .back { padding: 16px 16px 0; }
+    .app-title { font-size: 28px; }
+    .top { grid-template-columns: 1fr; }
+    .panel { padding: 18px; }
+    .form { grid-template-columns: 110px minmax(0, 1fr); }
+    .dilution-table { min-width: 640px; }
+  }
+
+  /* ---------- Print: A4, one page ---------- */
+  @page { size: A4 portrait; margin: 10mm; }
+  @media print {
+    :root {
+      --bg: #fff; --card: #fff; --ink: #1d1d1f; --muted: #6e6e73;
+      --line: rgba(0, 0, 0, 0.14); --fill: transparent; --fill-strong: transparent;
+      --accent: #0071e3; --accent-soft: rgba(0, 113, 227, 0.1); --bad: #d70015; --shadow: none;
+    }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    html, body { background: #fff; font-size: 11px; }
+    .back, .actions, .no-print, .changelog, .app-foot { display: none !important; }
+    #aav-dilution { max-width: none; gap: 8px; padding: 0; }
+    .app-head { padding: 0 0 2px; }
+    .app-title { font-size: 18px; }
+    .top { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+    .panel { padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; break-inside: avoid; }
+    h3 { margin: 0 0 6px; font-size: 13px; }
+    .panel-header { margin-bottom: 6px; }
+    .form { grid-template-columns: 120px minmax(0, 1fr); gap: 3px 8px; }
+    .form label, .field .unit { font-size: 11px; }
+    .metrics { gap: 6px; margin-bottom: 8px; }
+    .metric span { font-size: 10px; }
+    .metric strong { font-size: 14px; }
+    .steps { gap: 2px 6px; font-size: 11px; }
+    table { font-size: 11px; }
+    th, td { padding: 3px 5px; }
+    td input[type="number"] { width: 48px; }
+    .tube { width: 18px; height: 18px; font-size: 10px; }
+    input[type="number"], input[type="text"], input[type="date"], select {
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+      box-shadow: none;
+      color: inherit;
+      font: inherit;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    select { background-image: none; padding-right: 0; }
+    .note { font-size: 9px; margin-top: 4px; }
+    ol.footnotes { margin-top: 6px; font-size: 9px; }
+  }
+</style>
+<style>
+  /* AAV Dilution 固有 */
+  td input[type="text"] { width: 110px; text-align: right; }
+  td input.lot { width: 120px; text-align: left; }
+  td input.name { width: 200px; text-align: left; }
+  .lots-table th:nth-child(2), .lots-table td:nth-child(2) { text-align: left; }
+  td input.titer { width: 100px; }
+  td.evald { color: var(--muted); font-size: 12px; text-align: left; white-space: nowrap; }
+  .steps .rule { grid-column: 1 / -1; height: 1px; margin: 8px 0 2px; background: var(--line); }
+  td.thaw { text-align: left; font-weight: 650; color: var(--accent); }
+  td.chk { text-align: right; }
+  td.chk select { width: 96px; }
+  tr.off td { color: var(--muted); }
+  tr.total td { font-weight: 650; border-top: 1px solid var(--line); border-bottom: 0; }
+  .lots-table { min-width: 820px; }
+  .result-table { min-width: 980px; }
+  .hl { color: var(--accent); font-weight: 650; }
+  @media (max-width: 760px) { .lots-table, .result-table { min-width: 720px; } }
+  @media print {
+    td input[type="text"] { width: auto; }
+    .lots-table, .result-table { min-width: 0; }
+    
+  }
+</style>
+</head>
+<body>
+<a class="back" href="../../">&lsaquo; Web Tools</a>
+<div id="aav-dilution">
+  <header class="app-head">
+    <h1 class="app-title">In Vivo AAV Calculator</h1>
+    <div class="actions">
+      <span class="status" id="file-status"></span>
+      <button type="button" class="btn" id="import-data">Import</button>
+      <button type="button" class="btn" id="export-data">Export</button>
+      <input type="file" id="import-file" accept=".json,application/json" hidden>
+    </div>
+  </header>
+
+  <div class="top">
+    <div class="panel">
+      <h3>投与条件</h3>
+      <div class="form">
+        <label for="exp-name">Experiment</label>
+        <input type="text" id="exp-name" data-key="expName">
+        <label for="date">Date</label>
+        <input type="date" id="date" data-key="date">
+        <div class="sep"></div>
+        <label for="dose">Dose</label>
+        <div class="field"><input type="text" id="dose" data-key="dose" inputmode="decimal"><span class="unit">gc / mouse</span></div>
+        <label for="inj-vol">Injection volume</label>
+        <div class="field"><input type="number" id="inj-vol" data-key="injVol" min="0" step="any"><span class="unit">µL / mouse</span></div>
+        <label for="mice" class="strong">Mice</label>
+        <div class="field"><input type="number" id="mice" data-key="mice" min="0" step="1"><span class="unit">匹</span></div>
+        <label for="spare">Spare</label>
+        <div class="field"><input type="number" id="spare" data-key="spare" min="0" step="any"><span class="unit">匹分（ロス見込み）</span></div>
+        <label>Target titer</label>
+        <div class="field"><span class="computed" id="target-conc">-</span><span class="unit">gc / µL</span></div>
+        <label>Diluent</label>
+        <div class="field"><span class="computed">PBS(-)</span></div>
+      </div>
+      <div class="warn-box" id="input-warn" hidden></div>
+    </div>
+
+    <div class="panel">
+      <h3>計算</h3>
+      <div class="metrics">
+        <div class="metric"><span>必要なウイルス量</span><strong id="m-gc">-</strong></div>
+        <div class="metric"><span>調製する総液量</span><strong id="m-final">-</strong></div>
+        <div class="metric"><span>使用するウイルス原液</span><strong id="m-virus">-</strong></div>
+        <div class="metric"><span>加えるPBS(-)</span><strong id="m-pbs">-</strong></div>
+      </div>
+      <div class="steps" id="steps"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <h3>Virus lots</h3>
+      <div class="actions no-print">
+        <button type="button" class="btn" id="add-lot">Add lot</button>
+        <button type="button" class="btn" id="remove-lot">Remove lot</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="lots-table" aria-label="virus lots">
+        <thead>
+          <tr>
+            <th>Virus name</th>
+            <th>Lot</th>
+            <th>Volume (µL)</th>
+            <th style="text-align:left"></th>
+            <th>Titer (gc/µL)</th>
+            <th class="no-print">Use</th>
+          </tr>
+        </thead>
+        <tbody id="lots-body"></tbody>
+      </table>
+    </div>
+    <p class="note">Volume は分注の構成を「1本の量*本数」で入力します（例: <code>100*6</code>、<code>50*8+31*1</code>）。Titer は <code>2.14E+10</code> のように入力できます。Use は「自動」（全Lotから、溶かすウイルスが最小になる組合せを選ぶ）、「優先」（先に使う。優先Lotだけで足りればその中から選ぶ）、「使わない」から選びます。</p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <h3>希釈の手順</h3>
+      <div class="actions no-print">
+        <button type="button" class="btn" id="copy-table">Copy</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="result-table" aria-label="dilution">
+        <thead>
+          <tr>
+            <th>Virus / Lot</th>
+            <th>Titer (gc/µL)</th>
+            <th style="text-align:left">Thaw (tubes)</th>
+            <th>Thawed (µL)</th>
+            <th>Virus used (µL)</th>
+            <th>PBS(-) (µL)</th>
+            <th>Final (µL)</th>
+            <th>Dilution</th>
+            <th>gc</th>
+            <th>Mice</th>
+            <th>Frozen left (µL)</th>
+          </tr>
+        </thead>
+        <tbody id="result-body"></tbody>
+      </table>
+    </div>
+    <p class="note">各Lotを上記の量のPBS(-)で希釈すると、すべて目標titerになります。希釈後の液を合わせて、1匹あたりの投与量ずつ投与してください。Thaw は溶かすチューブの本数です（必要量以上で、溶かすウイルス量（gc）が最小になる組合せ）。溶かしたチューブに余りが出た場合は Thawed − Virus used で確認できます。Frozen left は未開封で残る原液量です。</p>
+    <div class="status" id="copy-status"></div>
+    <textarea id="copy-fallback" class="no-print" readonly hidden aria-label="dilution (manual copy)"></textarea>
+  </div>
+
+  <footer class="app-foot">
+    <div class="credit">Created with Claude | kamel</div>
+    <div class="actions">
+      <button type="button" class="btn text" id="reset">Reset</button>
+      <button type="button" class="btn primary" id="print-page">Print</button>
+    </div>
+  </footer>
+  <details class="changelog">
+    <summary>Changelog</summary>
+    <ul>
+      <li><span class="ver">v1.0</span><span class="date">2026/10/08</span><span>First release</span></li>
+    </ul>
+  </details>
+
+  <script>
+    (() => {
+      const root = document.getElementById("aav-dilution");
+      const $ = sel => root.querySelector(sel);
+      const pad = n => String(n).padStart(2, "0");
+      const today = () => {
+        const d = new Date();
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      };
+      const defaults = () => ({
+        expName: "",
+        date: today(),
+        dose: "1.5E+12",
+        injVol: 100,
+        mice: 10,
+        spare: 0,
+        lots: [
+          { name: "", lot: "#260812", volume: "100*6", titer: "2.14E+10", mode: "auto" },
+          { name: "", lot: "#260909", volume: "50*8+31*1", titer: "2.63E+10", mode: "auto" }
+        ]
+      });
+      let state = defaults();
+
+      // ---------- Parsing / formatting ----------
+      // 数値、または 100*6 や 50*3+31 のような四則演算の式を評価する
+      const evalExpr = text => {
+        const t = String(text ?? "").trim().replace(/[×xX]/g, "*").replace(/÷/g, "/").replace(/＋/g, "+");
+        if (t === "") return NaN;
+        if (!/^[0-9eE.+\-*/()\s]+$/.test(t)) return NaN;
+        try {
+          const v = Function(`"use strict"; return (${t});`)();
+          return Number.isFinite(v) ? v : NaN;
+        } catch { return NaN; }
+      };
+      // 分注の構成を読む: "50*8+31*1" → [{size:50,n:8},{size:31,n:1}]。数字だけなら1本として扱う
+      const parseTubes = text => {
+        const t = String(text ?? "").trim().replace(/[×xX]/g, "*").replace(/＋/g, "+");
+        if (t === "") return [];
+        const groups = [];
+        for (const term of t.split("+")) {
+          const m = term.trim().match(/^(\d+(?:\.\d+)?)\s*(?:\*\s*(\d+))?$/);
+          if (!m) return null;
+          const size = Number(m[1]), n = m[2] === undefined ? 1 : Number(m[2]);
+          if (!(size > 0) || !(n > 0)) return null;
+          const g = groups.find(x => x.size === size);
+          if (g) g.n += n; else groups.push({ size, n });
+        }
+        return groups;
+      };
+      // 溶かすチューブの組合せを全探索し、溶かすgcの合計が必要量以上で最小（同じなら本数が少ない）になるものを選ぶ
+      // lots: [{tubes:[{size,n}], titer}] → Map(lot → 各グループの本数)。足りないときは全部溶かす
+      const planThaw = (lots, needGc) => {
+        const items = [];
+        lots.forEach(l => l.tubes.forEach((g, i) => items.push({ lot: l, i, n: g.n, gc: g.size * l.titer })));
+        const result = new Map(lots.map(l => [l, l.tubes.map(() => 0)]));
+        const total = items.reduce((a, it) => a + it.n * it.gc, 0);
+        if (total <= needGc * (1 + 1e-9)) {
+          items.forEach(it => { result.get(it.lot)[it.i] = it.n; });
+          return result;
+        }
+        // 大きいチューブから決めると枝刈りが効く
+        items.sort((a, b) => b.gc - a.gc);
+        const suffix = items.map((_, i) => items.slice(i).reduce((a, it) => a + it.n * it.gc, 0));
+        const eps = needGc * 1e-9;
+        let best = { gc: Infinity, cnt: Infinity, picks: null };
+        let budget = 3e6;
+        const picks = [];
+        const walk = (i, gc, cnt) => {
+          if (--budget < 0) return;
+          if (gc >= needGc - eps) {
+            if (gc < best.gc - eps || (Math.abs(gc - best.gc) <= eps && cnt < best.cnt)) best = { gc, cnt, picks: picks.slice() };
+            return;
+          }
+          if (i === items.length || gc + suffix[i] < needGc - eps || gc >= best.gc) return;
+          for (let k = items[i].n; k >= 0; k--) {
+            picks[i] = k;
+            walk(i + 1, gc + k * items[i].gc, cnt + k);
+          }
+          picks[i] = 0;
+        };
+        walk(0, 0, 0);
+        if (!best.picks) { items.forEach(it => { result.get(it.lot)[it.i] = it.n; }); return result; }
+        items.forEach((it, idx) => { result.get(it.lot)[it.i] = best.picks[idx] || 0; });
+        return result;
+      };
+      const tubeText = parts => parts.map(x => `${num(x.size, 2)} µL × ${x.n}`).join(" + ");
+      const supDigits = { "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+      const sup = n => String(n).split("").map(c => supDigits[c] || c).join("");
+      const sci = (v, digits = 3) => {
+        if (!Number.isFinite(v)) return "-";
+        if (v === 0) return "0";
+        let exp = Math.floor(Math.log10(Math.abs(v)));
+        let mant = v / 10 ** exp;
+        if (Math.abs(Number(mant.toPrecision(digits))) >= 10) { exp += 1; mant /= 10; }
+        const m = Number(mant.toPrecision(digits));
+        return `${m.toFixed(digits - 1)}×10${sup(exp)}`;
+      };
+      const sciPlain = v => Number.isFinite(v) ? v.toExponential(2).toUpperCase().replace(/E\+?/, "E+").replace("E+-", "E-") : "";
+      const num = (v, max = 2) => Number.isFinite(v) ? v.toLocaleString("en-US", { maximumFractionDigits: max }) : "-";
+      const vol = v => Number.isFinite(v) ? v.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "-";
+      const lotLabel = (r, i = 0) => [r.name, r.lot].filter(Boolean).join(" ") || `(lot ${i + 1})`;
+      const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+      // ---------- Calculation ----------
+      function compute() {
+        const s = state;
+        const dose = evalExpr(s.dose);
+        const injVol = Number(s.injVol);
+        const mice = Number(s.mice) || 0;
+        const spare = Number(s.spare) || 0;
+        const n = mice + spare;
+        const valid = dose > 0 && injVol > 0 && n > 0;
+        const targetConc = valid ? dose / injVol : NaN;      // gc/µL
+        const needGc = valid ? dose * n : NaN;
+        const finalVol = valid ? injVol * n : NaN;
+
+        const rows = s.lots.map(l => ({ name: l.name, lot: l.lot, mode: l.mode, eligible: false, tubes: parseTubes(l.volume), volume: NaN, titer: evalExpr(l.titer),
+          take: 0, pbs: 0, final: 0, gc: 0, mice: 0, thawed: 0, pick: null, left: NaN, tooDilute: false }));
+        rows.forEach(r => { r.volume = r.tubes && r.tubes.length ? r.tubes.reduce((a, g) => a + g.size * g.n, 0) : NaN; });
+        let remaining = needGc;
+        let totalStockGc = 0;
+        if (valid) {
+          rows.forEach(r => {
+            r.left = r.volume;
+            if (r.mode === "skip" || !(r.volume > 0) || !(r.titer > 0)) return;
+            if (r.titer < targetConc) { r.tooDilute = true; return; }
+            r.eligible = true;
+            totalStockGc += r.volume * r.titer;
+          });
+          const eligible = rows.filter(r => r.eligible);
+          const first = eligible.filter(r => r.mode === "first");
+          const rest = eligible.filter(r => r.mode !== "first");
+          // 「優先」のLotだけで足りればその中で、足りなければ全部溶かして残りを他のLotから最適化する
+          const firstGc = first.reduce((a, r) => a + r.volume * r.titer, 0);
+          let plan = new Map();
+          if (first.length && firstGc < needGc) {
+            first.forEach(r => plan.set(r, r.tubes.map(g => g.n)));
+            const sub = planThaw(rest, needGc - firstGc);
+            sub.forEach((v, k) => plan.set(k, v));
+          } else {
+            plan = planThaw(first.length ? first : eligible, needGc);
+          }
+          // 優先Lot → 行の順に使い、最後のLotに端数（溶かしたが使わない分）を残す
+          const order = [...first, ...rest].filter(r => plan.has(r));
+          order.forEach(r => {
+            const counts = plan.get(r);
+            const parts = r.tubes.map((g, i) => ({ size: g.size, n: counts[i] })).filter(x => x.n > 0);
+            const thawed = parts.reduce((a, x) => a + x.size * x.n, 0);
+            if (!(thawed > 0)) return;
+            r.pick = { vol: thawed, cnt: parts.reduce((a, x) => a + x.n, 0), parts };
+            r.thawed = thawed;
+            r.gc = Math.min(thawed * r.titer, Math.max(remaining, 0));
+            r.take = r.gc / r.titer;
+            r.final = r.gc / targetConc;
+            r.pbs = r.final - r.take;
+            r.mice = r.gc / dose;
+            r.left = r.volume - thawed;
+            r.fold = r.titer / targetConc;
+            remaining -= r.gc;
+          });
+        }
+        const short = valid && remaining > needGc * 1e-9;
+        const total = rows.reduce((a, r) => ({ take: a.take + r.take, pbs: a.pbs + r.pbs, final: a.final + r.final, gc: a.gc + r.gc, mice: a.mice + r.mice }),
+          { take: 0, pbs: 0, final: 0, gc: 0, mice: 0 });
+        total.thawed = rows.reduce((a, r) => a + (r.thawed || 0), 0);
+        const maxMice = valid ? Math.floor(totalStockGc / dose + 1e-9) : 0;
+        return { dose, injVol, mice, spare, n, valid, targetConc, needGc, finalVol, rows, total, short, shortGc: remaining, maxMice };
+      }
+
+      // ---------- Rendering ----------
+      function renderLots() {
+        const body = $("#lots-body");
+        body.textContent = "";
+        state.lots.forEach((l, i) => {
+          const tr = document.createElement("tr");
+          const cell = (content, cls) => {
+            const td = document.createElement("td");
+            if (cls) td.className = cls;
+            if (content instanceof Node) td.append(content); else td.textContent = content;
+            tr.append(td);
+            return td;
+          };
+          const input = (key, cls, type = "text") => {
+            const el = document.createElement("input");
+            el.type = type;
+            el.className = cls;
+            el.value = l[key];
+            el.setAttribute("aria-label", `lot ${i + 1} ${key}`);
+            if (key !== "lot" && key !== "name") el.inputMode = "decimal";
+            el.addEventListener("input", () => { l[key] = el.value; update(); });
+            return el;
+          };
+          cell(input("name", "name"));
+          cell(input("lot", "lot"));
+          cell(input("volume", "vol"));
+          cell("", "evald");
+          cell(input("titer", "titer"));
+          const sel = document.createElement("select");
+          [["auto", "自動"], ["first", "優先"], ["skip", "使わない"]].forEach(([v, t]) => sel.append(new Option(t, v)));
+          sel.value = l.mode;
+          sel.setAttribute("aria-label", `use lot ${i + 1}`);
+          sel.addEventListener("change", () => { l.mode = sel.value; update(); });
+          cell(sel, "chk no-print");
+          body.append(tr);
+        });
+      }
+
+      function renderResults(r) {
+        const body = $("#result-body");
+        body.textContent = "";
+        r.rows.forEach((row, i) => {
+          const tr = document.createElement("tr");
+          const active = row.take > 0;
+          if (row.mode === "skip" || (!active && !row.tooDilute)) tr.className = "off";
+          if (row.tooDilute) tr.className = "bad-row";
+          const cells = [
+            lotLabel(row, i),
+            sci(row.titer),
+            active ? tubeText(row.pick.parts) : "-",
+            active ? vol(row.thawed) : "-",
+            active ? vol(row.take) : "-",
+            active ? vol(row.pbs) : "-",
+            active ? vol(row.final) : "-",
+            active ? `${num(row.fold, 2)}×` : "-",
+            active ? sci(row.gc) : "-",
+            active ? num(row.mice, 1) : "-",
+            Number.isFinite(row.left) ? vol(row.left) : "-"
+          ];
+          cells.forEach((c, j) => {
+            const td = document.createElement("td");
+            td.textContent = c;
+            if (j === 2) td.classList.add("thaw");
+            if (j === 4 || j === 5) td.classList.add("copies");
+            tr.append(td);
+          });
+          if (row.tooDilute) tr.children[1].classList.add("bad");
+          body.append(tr);
+        });
+        if (r.valid) {
+          const t = r.total;
+          const tr = document.createElement("tr");
+          tr.className = "total";
+          ["Total", "", "", vol(t.thawed), vol(t.take), vol(t.pbs), vol(t.final), "", sci(t.gc), num(t.mice, 1), ""].forEach(c => {
+            const td = document.createElement("td");
+            td.textContent = c;
+            tr.append(td);
+          });
+          body.append(tr);
+        }
+      }
+
+      function renderCalc(r) {
+        const s = state;
+        const ok = r.valid;
+        const t = r.total;
+        $("#target-conc").textContent = ok ? sci(r.targetConc) : "-";
+        $("#m-gc").innerHTML = ok ? `${sci(r.needGc)} <small>gc</small>` : "-";
+        $("#m-final").innerHTML = ok ? `${vol(r.finalVol)} <small>µL</small>` : "-";
+        $("#m-virus").innerHTML = ok ? `${vol(t.take)} <small>µL</small>` : "-";
+        $("#m-pbs").innerHTML = ok ? `${vol(t.pbs)} <small>µL</small>` : "-";
+
+        const doseTxt = `${sci(r.dose)} gc`;
+        const rows = ok ? [
+          "1匹あたりの投与量から目標titerを求めます",
+          [`${doseTxt} ÷ ${num(r.injVol)} µL`, `<b>${sci(r.targetConc)} gc/µL</b>`],
+          `${num(r.mice, 2)} 匹${r.spare ? ` + 予備 ${num(r.spare, 2)} 匹` : ""}（${num(r.n, 2)} 匹分）に必要な量は`,
+          [`${doseTxt} × ${num(r.n, 2)} 匹`, `<b>${sci(r.needGc)} gc</b>`],
+          [`${num(r.injVol)} µL × ${num(r.n, 2)} 匹`, `<b>${vol(r.finalVol)} µL</b>（総液量）`],
+          { sep: true },
+          ...r.rows.filter(x => x.take > 0).flatMap(x => [
+            `${esc(lotLabel(x))}（${sci(x.titer)} gc/µL）は`,
+            [`${sci(x.gc)} gc ÷ ${sci(x.titer)} gc/µL`, `<b>${vol(x.take)} µL</b>（原液）`],
+            [`${tubeText(x.pick.parts)}`, `<b>${x.pick.cnt} 本を溶かす</b>（計 ${vol(x.thawed)} µL）`],
+            [`${vol(x.final)} µL − ${vol(x.take)} µL`, `<b>${vol(x.pbs)} µL</b>（PBS(-)）`]
+          ]),
+          { last: `${r.short ? "（原液が不足しています）" : `上記を希釈すると、${num(r.n, 2)} 匹分が ${sci(r.targetConc)} gc/µL（${sci(r.dose)} gc/${num(r.injVol)} µL）になります。`}` }
+        ] : [];
+        $("#steps").innerHTML = rows.map(row => typeof row === "string"
+          ? `<span class="caption">${row}</span>`
+          : row.sep ? `<span class="rule"></span>`
+          : row.last ? `<span class="caption last">${row.last}</span>`
+          : `<span class="lhs">${row[0]}</span><span class="eq">=</span><span>${row[1]}</span>`).join("");
+
+        const warn = [];
+        if (!ok) warn.push("Dose、Injection volume、Mice に正の値を入力してください。");
+        else {
+          if (r.short) warn.push(`ウイルスが不足しています（あと ${sci(r.shortGc)} gc）。この原液量では最大 ${r.maxMice} 匹分です。`);
+          if (r.rows.some(x => x.tooDilute)) warn.push("titerが目標より低いLotがあり、希釈では目標titerに届きません（赤字）。");
+          if (r.rows.some(x => x.eligible && x.volume > 0 && x.titer > 0 && x.take > 0 && x.take < 1)) warn.push("原液の使用量が1 µL未満のLotがあります。ピペットの誤差に注意してください。");
+          if (r.rows.some((x, i) => x.mode !== "skip" && state.lots[i].volume.trim() !== "" && !(x.volume > 0))) warn.push("Volume は 50*8+31*1 のように「1本の量*本数」を + でつないで入力してください。");
+        }
+        $("#input-warn").hidden = warn.length === 0;
+        $("#input-warn").textContent = warn.join(" ");
+      }
+
+      function update() {
+        const r = compute();
+        last = r;
+        renderCalc(r);
+        renderResults(r);
+        const evals = $("#lots-body").children;
+        r.rows.forEach((row, i) => {
+          if (!evals[i]) return;
+          const raw = String(state.lots[i].volume).trim();
+          evals[i].children[3].textContent = Number.isFinite(row.volume) && raw !== "" ? `= ${num(row.volume, 2)} µL / ${row.tubes.reduce((a, g) => a + g.n, 0)} 本` : "";
+          evals[i].classList.toggle("off", state.lots[i].mode === "skip");
+        });
+      }
+      let last;
+
+      function syncInputs() {
+        root.querySelectorAll("[data-key]").forEach(el => {
+          const v = state[el.dataset.key];
+          el.value = (v === undefined || Number.isNaN(v)) ? "" : v;
+        });
+      }
+
+      // ---------- Inputs ----------
+      root.querySelectorAll("[data-key]").forEach(el => {
+        el.addEventListener("input", () => {
+          const key = el.dataset.key;
+          state[key] = (el.type === "number") ? (el.value === "" ? NaN : Number(el.value)) : el.value;
+          update();
+        });
+      });
+      $("#add-lot").addEventListener("click", () => {
+        state.lots.push({ name: "", lot: "", volume: "", titer: "", mode: "auto" });
+        renderLots();
+        update();
+      });
+      $("#remove-lot").addEventListener("click", () => {
+        if (state.lots.length <= 1) return;
+        state.lots.pop();
+        renderLots();
+        update();
+      });
+      $("#reset").addEventListener("click", () => {
+        state = defaults();
+        syncInputs();
+        renderLots();
+        update();
+      });
+      $("#print-page").addEventListener("click", () => window.print());
+
+      // ---------- Copy (TSV) ----------
+      $("#copy-table").addEventListener("click", async () => {
+        const status = $("#copy-status");
+        const fallback = $("#copy-fallback");
+        if (!last.valid) { status.textContent = "Nothing to copy"; return; }
+        const header = ["Virus/Lot", "Titer(gc/uL)", "Thaw", "Thawed(uL)", "Virus used(uL)", "PBS(-)(uL)", "Final(uL)", "Dilution", "gc", "Mice", "Frozen left(uL)"];
+        const used = last.rows.filter(r => r.take > 0);
+        const f1 = v => Number(v.toFixed(1));
+        const t = last.total;
+        const text = [
+          [`Dose ${sciPlain(last.dose)} gc/mouse`, `Inj ${last.injVol} uL`, `Mice ${last.mice}+${last.spare}`, `Target ${sciPlain(last.targetConc)} gc/uL`],
+          header,
+          ...used.map(r => [lotLabel(r), sciPlain(r.titer), tubeText(r.pick.parts).replace(/µ/g, "u"), f1(r.thawed), f1(r.take), f1(r.pbs), f1(r.final), Number(r.fold.toFixed(2)), sciPlain(r.gc), f1(r.mice), f1(r.left)]),
+          ["Total", "", "", f1(t.thawed), f1(t.take), f1(t.pbs), f1(t.final), "", sciPlain(t.gc), f1(t.mice), ""]
+        ].map(cols => cols.join("\t")).join("\n");
+        try {
+          await navigator.clipboard.writeText(text);
+          fallback.hidden = true;
+          status.textContent = "Copied (paste into Excel / Numbers)";
+        } catch {
+          fallback.value = text;
+          fallback.hidden = false;
+          fallback.select();
+          status.textContent = "Could not copy automatically. Copy from the box below.";
+        }
+      });
+
+      // ---------- Export / Import ----------
+      const fileFormat = "aav-dilution-calculator";
+      const setFileStatus = text => {
+        const status = $("#file-status");
+        status.textContent = text;
+        window.setTimeout(() => { if (status.textContent === text) status.textContent = ""; }, 4000);
+      };
+      $("#export-data").addEventListener("click", () => {
+        const data = { format: fileFormat, version: 1, savedAt: new Date().toISOString(), ...state,
+          injVol: Number.isFinite(state.injVol) ? state.injVol : null,
+          mice: Number.isFinite(state.mice) ? state.mice : null,
+          spare: Number.isFinite(state.spare) ? state.spare : null };
+        const d = new Date();
+        const safe = String(state.expName || "aav").replace(/[\\/:*?"<>|\s]+/g, "_");
+        const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${safe}_dilution.json`;
+        document.body.append(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        setFileStatus("Exported");
+      });
+      $("#import-data").addEventListener("click", () => $("#import-file").click());
+      $("#import-file").addEventListener("change", async event => {
+        const input = event.target;
+        const file = input.files[0];
+        input.value = "";
+        if (!file) return;
+        try {
+          const data = JSON.parse(await file.text());
+          if (data?.format !== fileFormat || !Array.isArray(data.lots)) throw new Error("format");
+          const next = defaults();
+          next.expName = String(data.expName ?? "");
+          next.date = String(data.date ?? "");
+          next.dose = String(data.dose ?? "");
+          ["injVol", "mice", "spare"].forEach(k => { next[k] = (data[k] === null || data[k] === undefined || data[k] === "") ? NaN : Number(data[k]); });
+          next.lots = data.lots.map(l => ({ name: String(l.name ?? ""), lot: String(l.lot ?? ""), volume: String(l.volume ?? ""), titer: String(l.titer ?? ""), mode: ["auto", "first", "skip"].includes(l.mode) ? l.mode : (l.use === false ? "skip" : "auto") }));
+          if (next.lots.length === 0) next.lots = defaults().lots;
+          state = next;
+          syncInputs();
+          renderLots();
+          update();
+          setFileStatus(`Imported ${file.name}`);
+        } catch {
+          setFileStatus("Import failed: not an In Vivo AAV Calculator file");
+        }
+      });
+
+      syncInputs();
+      renderLots();
+      update();
+    })();
+  </script>
+</div>
+</body>
+</html>
