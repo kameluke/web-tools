@@ -61,7 +61,7 @@
     letter-spacing: -0.01em;
   }
   ul.tools { display: grid; gap: 16px; margin: 0; padding: 0; list-style: none; }
-  ul.tools li {
+  ul.tools > li {
     padding: 22px 24px;
     border-radius: 20px;
     background: var(--card);
@@ -90,6 +90,42 @@
   .tool-links a.launch:hover { background: var(--accent-hover); }
   .tool-links a.source { color: var(--accent); }
   .tool-links a.source:hover { background: var(--accent-soft); }
+  .filter { display: grid; gap: 12px; margin: 0 0 20px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    padding: 6px 16px;
+    border: 0;
+    border-radius: 980px;
+    background: var(--card);
+    color: var(--ink);
+    box-shadow: var(--shadow);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, opacity 0.15s;
+  }
+  .chip:hover { background: var(--fill-strong); }
+  .chip:active { opacity: 0.7; }
+  .chip:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 1px; }
+  .chip[aria-pressed="true"] { background: var(--accent); color: #fff; }
+  #search {
+    width: 100%;
+    padding: 8px 14px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--ink);
+    box-shadow: var(--shadow);
+    font: inherit;
+    font-size: 14px;
+  }
+  #search:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .tool-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; padding: 0; list-style: none; }
+  .tool-tags li { padding: 1px 9px; border-radius: 980px; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 500; }
+  ul.tools > li[hidden] { display: none; }
+  #empty { margin: 8px 4px; color: var(--muted); }
+  #empty[hidden] { display: none; }
   footer {
     margin-top: 40px;
     padding-top: 20px;
@@ -103,7 +139,7 @@
   @media (max-width: 760px) {
     body { padding: 40px 16px 36px; }
     h1 { font-size: 32px; }
-    ul.tools li { padding: 18px; }
+    ul.tools > li { padding: 18px; }
   }
 </style>
 </head>
@@ -114,12 +150,19 @@
   <!--
     新しいツールを追加する手順 / How to add a new tool:
     1. tools/<tool-name>/ にHTML/CSS/JSを配置する / Place HTML/CSS/JS under tools/<tool-name>/
-    2. 下の <ul class="tools"> に <li> を1つ追加する / Add one <li> to <ul class="tools"> below
+    2. 下の <ul class="tools"> に <li data-tags="..."> を1つ追加する / Add one <li data-tags="..."> to <ul class="tools"> below
+       - data-tags: カテゴリをスペース区切りで指定 (例: "qPCR AAV")。フィルターのボタンは自動で増える
+         / Space-separated categories (e.g. "qPCR AAV"). Filter buttons are generated automatically
        - launch: 実行ページ (GitHub Pages上のURL) / launch page (GitHub Pages URL)
        - source: GitHubのソースコード (tree/main/tools/<tool-name>) / source link
   -->
-  <ul class="tools">
-    <li>
+  <div class="filter">
+    <div class="chips" id="chips" role="group" aria-label="Filter by category"></div>
+    <input type="search" id="search" placeholder="検索 / Search" aria-label="Search tools">
+  </div>
+
+  <ul class="tools" id="tools">
+    <li data-tags="Reagent">
       <p class="tool-name">Reagent Calculator</p>
       <p class="tool-desc">試薬の溶液調製・希釈・DNAモル濃度・マスターミックスを計算するツールです。<br>Calculates reagent molar solution prep, dilution, DNA molarity, and master mix volumes.</p>
       <div class="tool-links">
@@ -127,7 +170,7 @@
         <a class="source" href="https://github.com/kameluke/web-tools/tree/main/tools/reagent-cal" target="_blank" rel="noopener">ソースを見る / View source</a>
       </div>
     </li>
-    <li>
+    <li data-tags="Protein">
       <p class="tool-name">Protein Quantification Calculator</p>
       <p class="tool-desc">STD濃度・Abs値から標準曲線を作成し、サンプル濃度と調製量を計算するツールです。<br>Generates a standard curve from STD concentrations and Abs values, and calculates sample concentration and preparation volume.</p>
       <div class="tool-links">
@@ -135,7 +178,7 @@
         <a class="source" href="https://github.com/kameluke/web-tools/tree/main/tools/protein-quantification-calculator" target="_blank" rel="noopener">ソースを見る / View source</a>
       </div>
     </li>
-    <li>
+    <li data-tags="qPCR AAV">
       <p class="tool-name">Plasmid Dilution Calculator</p>
       <p class="tool-desc">plasmidの長さと濃度から、qPCR検量線用の希釈倍率と段階希釈の手順を計算するツールです。<br>Calculates the dilution factor and serial dilution steps for a plasmid qPCR standard curve from plasmid length and concentration.</p>
       <div class="tool-links">
@@ -143,7 +186,7 @@
         <a class="source" href="https://github.com/kameluke/web-tools/tree/main/tools/plasmid-dilution" target="_blank" rel="noopener">ソースを見る / View source</a>
       </div>
     </li>
-    <li>
+    <li data-tags="qPCR AAV">
       <p class="tool-name">AAV Titer Calculator</p>
       <p class="tool-desc">qPCR/ddPCRのCt値からAAVベクターの検量線・コピー数・titerを計算するツールです。<br>Calculates AAV vector standard curve, copy number, and titer from qPCR/ddPCR Ct values.</p>
       <div class="tool-links">
@@ -151,7 +194,7 @@
         <a class="source" href="https://github.com/kameluke/web-tools/tree/main/tools/aav-titer-calculator" target="_blank" rel="noopener">ソースを見る / View source</a>
       </div>
     </li>
-    <li>
+    <li data-tags="AAV Mice">
       <p class="tool-name">In Vivo AAV Calculator</p>
       <p class="tool-desc">複数Lotのウイルス原液とtiterから、目標の投与量（gc/匹）になるPBS(-)での希釈量を、匹数に応じて計算するツールです。<br>Calculates how to dilute multiple AAV lots with PBS(-) to a target dose (gc/mouse) for a given number of mice.</p>
       <div class="tool-links">
@@ -161,11 +204,70 @@
     </li>
   </ul>
 
+  <p id="empty" hidden>該当するツールがありません。 / No matching tools.</p>
+
   <footer>
     <p class="contact">
       連絡先 Contact:<br>
       <a href="mailto:takeshi.kameyama@gmail.com">takeshi.kameyama@gmail.com</a>
     </p>
   </footer>
+  <script>
+    (() => {
+      const ORDER = ["Reagent", "Protein", "qPCR", "AAV", "Mice"]; // ボタンの並び順。ここにないタグは最後に追加される
+      const items = [...document.querySelectorAll("#tools > li")].map(li => ({
+        li,
+        tags: (li.dataset.tags || "").split(/\s+/).filter(Boolean),
+        text: li.textContent.toLowerCase()
+      }));
+      const found = [...new Set(items.flatMap(i => i.tags))];
+      const tags = [...ORDER.filter(t => found.includes(t)), ...found.filter(t => !ORDER.includes(t))];
+
+      // 各カードにタグを表示
+      items.forEach(({ li, tags: ts }) => {
+        if (!ts.length) return;
+        const ul = document.createElement("ul");
+        ul.className = "tool-tags";
+        ts.forEach(t => { const x = document.createElement("li"); x.textContent = t; ul.append(x); });
+        li.querySelector(".tool-name").after(ul);
+      });
+
+      const chips = document.getElementById("chips");
+      const search = document.getElementById("search");
+      const empty = document.getElementById("empty");
+      const readTag = () => {
+        try { return decodeURIComponent(new URLSearchParams(location.hash.slice(1)).get("tag") || ""); } catch { return ""; }
+      };
+      let active = tags.includes(readTag()) ? readTag() : "";
+
+      ["", ...tags].forEach(t => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "chip";
+        b.dataset.tag = t;
+        b.textContent = t || "All";
+        b.addEventListener("click", () => {
+          active = (t === active) ? "" : t;
+          try { history.replaceState(null, "", active ? `#tag=${encodeURIComponent(active)}` : location.pathname + location.search); } catch {}
+          apply();
+        });
+        chips.append(b);
+      });
+
+      function apply() {
+        const q = search.value.trim().toLowerCase();
+        let shown = 0;
+        items.forEach(({ li, tags: ts, text }) => {
+          const ok = (!active || ts.includes(active)) && (!q || text.includes(q));
+          li.hidden = !ok;
+          if (ok) shown++;
+        });
+        chips.querySelectorAll(".chip").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.tag === active)));
+        empty.hidden = shown > 0;
+      }
+      search.addEventListener("input", apply);
+      apply();
+    })();
+  </script>
 </body>
 </html>
