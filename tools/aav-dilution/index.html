@@ -390,7 +390,7 @@
   .steps .rule { grid-column: 1 / -1; height: 1px; margin: 8px 0 2px; background: var(--line); }
   td.thaw { text-align: left; font-weight: 650; color: var(--accent); }
   td.chk { text-align: right; }
-  td.chk select { width: 96px; }
+  td.chk select { width: 96px; text-align: right; text-align-last: right; }
   tr.off td { color: var(--muted); }
   tr.total td { font-weight: 650; border-top: 1px solid var(--line); border-bottom: 0; }
   .lots-table { min-width: 820px; }
@@ -398,9 +398,20 @@
   .hl { color: var(--accent); font-weight: 650; }
   @media (max-width: 760px) { .lots-table, .result-table { min-width: 720px; } }
   @media print {
-    td input[type="text"] { width: auto; }
-    .lots-table, .result-table { min-width: 0; }
-    
+    .table-wrap { overflow: visible; }
+    .lots-table, .result-table { min-width: 0; width: 100%; table-layout: fixed; }
+    td input[type="text"] { width: 100%; min-width: 0; }
+    td input.name { width: 100%; }
+    td input.lot { width: 100%; }
+    td input.titer { width: 100%; }
+    td.evald { font-size: 9px; white-space: normal; }
+    td.chk select { width: 100%; text-align: right; text-align-last: right; }
+    .lots-table th:nth-child(1), .lots-table td:nth-child(1) { width: 20%; }
+    .lots-table th:nth-child(2), .lots-table td:nth-child(2) { width: 13%; }
+    .lots-table th:nth-child(3), .lots-table td:nth-child(3) { width: 13%; }
+    .lots-table th:nth-child(4), .lots-table td:nth-child(4) { width: 22%; }
+    .lots-table th:nth-child(5), .lots-table td:nth-child(5) { width: 17%; }
+    .lots-table th:nth-child(6), .lots-table td:nth-child(6) { width: 15%; }
   }
 </style>
 </head>
@@ -471,7 +482,7 @@
             <th>Volume (µL)</th>
             <th style="text-align:left"></th>
             <th>Titer (gc/µL)</th>
-            <th class="no-print">Use</th>
+            <th>Use</th>
           </tr>
         </thead>
         <tbody id="lots-body"></tbody>
@@ -728,7 +739,7 @@
           sel.value = l.mode;
           sel.setAttribute("aria-label", `use lot ${i + 1}`);
           sel.addEventListener("change", () => { l.mode = sel.value; update(); });
-          cell(sel, "chk no-print");
+          cell(sel, "chk");
           body.append(tr);
         });
       }
