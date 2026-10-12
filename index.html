@@ -209,7 +209,7 @@
         <a class="source" href="https://github.com/kameluke/web-tools/tree/main/tools/aav-dilution" target="_blank" rel="noopener">ソースを見る / View source</a>
       </div>
     </li>
-    <li>
+    <li data-tags="Cell">
       <p class="tool-name">Cell Culture Calculator</p>
       <p class="tool-desc">dish・plate・flaskのサイズと細胞懸濁液の濃度から、播種に必要な懸濁液量と細胞数を計算するツールです。<br>Calculates the suspension volume and cell number needed to seed dishes, plates, and flasks from their size and your cell suspension concentration.</p>
       <div class="tool-links">
@@ -229,7 +229,7 @@
   </footer>
   <script>
     (() => {
-      const ORDER = ["Reagent", "Protein", "qPCR", "AAV", "Mice"]; // ボタンの並び順。ここにないタグは最後に追加される
+      const ORDER = ["Reagent", "Protein", "qPCR", "AAV", "Mice", "Cell"]; // ボタンの並び順。ここにないタグは最後に追加される
       const items = [...document.querySelectorAll("#tools > li")].map(li => ({
         li,
         tags: (li.dataset.tags || "").split(/\s+/).filter(Boolean),
