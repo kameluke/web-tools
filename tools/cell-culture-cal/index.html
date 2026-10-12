@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Cell Culture Calculator</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --ink: #1d1d1f;
+    --muted: #6e6e73;
+    --line: rgba(0, 0, 0, 0.08);
+    --fill: #f5f5f7;
+    --fill-strong: #e8e8ed;
+    --accent: #0071e3;
+    --accent-hover: #0077ed;
+    --accent-soft: rgba(0, 113, 227, 0.1);
+    --warn: #ff9500;
+    --bad: #d70015;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Segoe UI", sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --card: #1c1c1e;
+      --ink: #f5f5f7;
+      --muted: #98989d;
+      --line: rgba(255, 255, 255, 0.12);
+      --fill: #2c2c2e;
+      --fill-strong: #3a3a3c;
+      --accent: #2997ff;
+      --accent-hover: #4aa8ff;
+      --accent-soft: rgba(41, 151, 255, 0.16);
+      --warn: #ff9f0a;
+      --bad: #ff453a;
+      --shadow: none;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .back {
+    display: block;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px 24px 0;
+    color: var(--accent);
+    font-size: 13px;
+    text-decoration: none;
+  }
+  .back:hover { text-decoration: underline; }
+
+  #cell-culture-cal {
+    display: grid;
+    gap: 16px;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 12px 24px 40px;
+  }
+
+  /* ---------- Header ---------- */
+  .app-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px 16px;
+    padding: 8px 4px 12px;
+  }
+  .app-title {
+    margin: 0;
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+  }
+  .app-head p.lead { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+
+  /* ---------- Panels ---------- */
+  .panel {
+    min-width: 0;
+    padding: 20px 22px;
+    border-radius: 20px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+  h3 {
+    margin: 0 0 14px;
+    font-size: 19px;
+    font-weight: 650;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+  .panel-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+    margin-bottom: 14px;
+  }
+  .panel-header h3 { margin: 0; }
+
+  /* ---------- Form ---------- */
+  .form {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 8px 12px;
+    align-items: center;
+  }
+  .form label { color: var(--muted); font-size: 13px; }
+  .field { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .field .unit { flex: 0 0 auto; color: var(--muted); font-size: 13px; }
+  .field .pow { flex: 0 0 auto; color: var(--muted); font-size: 13px; }
+  .field input[type="number"] { max-width: 140px; }
+  .field .pow + input { max-width: 56px; }
+
+  input[type="number"], select {
+    width: 100%;
+    min-width: 0;
+    padding: 5px 9px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: var(--fill);
+    color: var(--ink);
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+  select {
+    padding-right: 26px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2386868b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 9px center;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+  }
+  input:hover, select:hover { background-color: var(--fill-strong); }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    background-color: var(--card);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .note { margin-top: 10px; color: var(--muted); font-size: 12px; }
+  .cite { margin: 0 0 14px; color: var(--muted); font-size: 12px; }
+  .cite a { color: var(--accent); text-decoration: none; }
+  .cite a:hover { text-decoration: underline; }
+  .warn-box {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(255, 149, 0, 0.1);
+    color: var(--warn);
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .warn-box[hidden] { display: none; }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .btn {
+    padding: 6px 16px;
+    border: 0;
+    border-radius: 980px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .btn:hover { background: var(--fill-strong); }
+  .btn:active { opacity: 0.7; }
+  .btn:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 1px; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.primary:hover { background: var(--accent-hover); }
+  .btn.text { background: transparent; }
+  .btn.text:hover { background: var(--accent-soft); }
+
+  /* ---------- How-to-seed result ---------- */
+  .rule { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
+  .howto {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: var(--accent-soft);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .howto strong { color: var(--accent); font-weight: 650; }
+  .howto p { margin: 0; }
+  .howto p + p { margin-top: 6px; }
+
+  /* ---------- Reference table ---------- */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    min-width: 640px;
+    border-collapse: collapse;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  th, td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--line);
+    text-align: right;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  th { color: var(--muted); font-size: 12px; font-weight: 500; }
+  th:first-child, td:first-child { padding-left: 0; text-align: left; }
+  th:last-child, td:last-child { padding-right: 0; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tr.group-row td {
+    padding-top: 14px;
+    border-bottom: 1px solid var(--line);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 650;
+  }
+  tr.group-row:first-child td { padding-top: 0; }
+  td.vessel { text-align: left; font-weight: 600; }
+  td.medium-ref { color: var(--muted); text-align: left; white-space: nowrap; }
+  tr.current td { color: var(--accent); font-weight: 650; }
+
+  /* ---------- Footer ---------- */
+  .app-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 4px 0;
+  }
+  .credit { color: var(--muted); font-size: 12px; }
+  .app-foot .actions { margin: 0; }
+
+  .changelog { padding: 0 4px; color: var(--muted); font-size: 12px; }
+  .changelog summary { display: inline-block; cursor: pointer; list-style: none; user-select: none; }
+  .changelog summary::-webkit-details-marker { display: none; }
+  .changelog summary::before { content: "\25B8\00a0"; }
+  .changelog[open] summary::before { content: "\25BE\00a0"; }
+  .changelog summary:hover { color: var(--ink); }
+  .changelog ul { margin: 6px 0 0; padding: 0; list-style: none; }
+  .changelog li { display: flex; gap: 12px; margin-top: 4px; }
+  .changelog .ver { flex: 0 0 32px; font-variant-numeric: tabular-nums; }
+  .changelog .date { flex: 0 0 76px; font-variant-numeric: tabular-nums; }
+
+  @media (max-width: 760px) {
+    #cell-culture-cal { padding: 8px 16px 32px; }
+    .back { padding: 16px 16px 0; }
+    .app-title { font-size: 28px; }
+    .panel { padding: 18px; }
+    .form { grid-template-columns: 130px minmax(0, 1fr); }
+    .metrics { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Print: A4, one page ---------- */
+  @page { size: A4 portrait; margin: 10mm; }
+  @media print {
+    :root {
+      --bg: #fff; --card: #fff; --ink: #1d1d1f; --muted: #6e6e73;
+      --line: rgba(0, 0, 0, 0.14); --fill: transparent; --fill-strong: transparent;
+      --accent: #0071e3; --accent-soft: rgba(0, 113, 227, 0.1); --warn: #b36b00; --shadow: none;
+    }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    html, body { background: #fff; font-size: 11px; }
+    .back, .actions, .no-print, .changelog, .app-foot { display: none !important; }
+    #cell-culture-cal { max-width: none; gap: 8px; padding: 0; }
+    .app-head { padding: 0 0 2px; }
+    .app-title { font-size: 18px; }
+    .panel { padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; break-inside: avoid; }
+    h3 { margin: 0 0 6px; font-size: 13px; }
+    .form { grid-template-columns: 140px minmax(0, 1fr); gap: 3px 8px; }
+    .form label, .field .unit { font-size: 11px; }
+    .rule { margin: 8px 0; }
+    .howto { margin-top: 8px; padding: 8px 10px; font-size: 11px; }
+    .table-wrap { overflow: visible; }
+    table { min-width: 0; width: 100%; table-layout: fixed; font-size: 10px; }
+    th, td { padding: 3px 4px; white-space: normal; }
+    th:nth-child(1), td:nth-child(1) { width: 24%; }
+    th:nth-child(2), td:nth-child(2) { width: 18%; }
+    th:nth-child(3), td:nth-child(3) { width: 20%; }
+    th:nth-child(4), td:nth-child(4) { width: 20%; }
+    th:nth-child(5), td:nth-child(5) { width: 18%; }
+    input[type="number"], select {
+      padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none;
+      color: inherit; font: inherit; -webkit-appearance: none; appearance: none;
+    }
+    select { background-image: none; padding-right: 0; }
+    .note { font-size: 9px; margin-top: 4px; }
+    .cite { font-size: 9px; margin: 0 0 6px; }
+  }
+</style>
+</head>
+<body>
+<a class="back" href="../../">&lsaquo; Web Tools</a>
+<div id="cell-culture-cal">
+  <header class="app-head">
+    <h1 class="app-title">Cell Culture Calculator</h1>
+    <p class="lead">細胞培養 播種量計算 / Seeding volume calculator</p>
+  </header>
+
+  <div class="panel">
+    <h3>Seeding calculator</h3>
+    <div class="form">
+      <label for="cell-num">Cell number</label>
+      <div class="field">
+        <input type="number" id="cell-num" min="0" step="any" value="1.0">
+        <span class="pow">× 10^</span>
+        <input type="number" id="cell-exp" step="1" value="6">
+        <span class="unit">cells/mL</span>
+      </div>
+    </div>
+    <p class="note">血球計算盤などで測定した、播種前の細胞懸濁液の濃度を入力してください（10のべき乗も変更できます）。<br>Enter the counted concentration of your cell suspension before seeding (the power of 10 is also editable).</p>
+
+    <hr class="rule">
+
+    <div class="form">
+      <label for="vessel">Vessel</label>
+      <select id="vessel" aria-label="vessel"></select>
+      <label for="count">Number of vessels</label>
+      <div class="field"><input type="number" id="count" min="0" step="1" value="1"></div>
+      <label for="target">Cells to seed / vessel</label>
+      <div class="field">
+        <input type="number" id="target" min="0" step="any">
+        <span class="pow">× 10^</span>
+        <input type="number" id="target-exp" step="1">
+        <span class="unit">cells</span>
+      </div>
+    </div>
+    <p class="note">蒔きたい細胞数を入力してください（デフォルトは参照表の標準的な播種密度です）。<br>Enter the number of cells you want to seed per vessel (defaults to the standard density from the reference table).</p>
+
+    <div class="howto" id="howto"></div>
+    <div class="warn-box" id="warn" hidden></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <h3>Reference table</h3>
+    </div>
+    <p class="cite">Reference: <a href="https://www.thermofisher.com/blog/learning-at-the-bench/useful-numbers-for-cell-culture/" target="_blank" rel="noopener">Useful Numbers for Cell Culture – Thermo Fisher Scientific</a></p>
+    <div class="table-wrap">
+      <table aria-label="cell culture vessel reference">
+        <thead>
+          <tr>
+            <th>Vessel</th>
+            <th>Surface Area</th>
+            <th>Seeding Density</th>
+            <th>Cells at Confluency</th>
+            <th>Growth Medium</th>
+          </tr>
+        </thead>
+        <tbody id="ref-body"></tbody>
+      </table>
+    </div>
+    <p class="note">Surface Area は cm²。Seeding Density と Cells at Confluency は × 10⁶ cells（1容器あたり）。Growth Medium は容器ごとの標準的な培地量（参考値）です。<br>Surface Area is in cm². Seeding Density and Cells at Confluency are × 10⁶ cells per vessel. Growth Medium is the typical total medium volume per vessel (reference only).</p>
+  </div>
+
+  <footer class="app-foot">
+    <div class="credit">Created with Claude | kamel</div>
+    <div class="actions">
+      <button type="button" class="btn text" id="reset-all">Reset</button>
+      <button type="button" class="btn primary" id="print-page">Print</button>
+    </div>
+  </footer>
+  <details class="changelog">
+    <summary>Changelog</summary>
+    <ul>
+      <li><span class="ver">v1.0</span><span class="date">2026/10/10</span><span>First web release</span></li>
+    </ul>
+  </details>
+
+  <script>
+    (() => {
+      const root = document.getElementById("cell-culture-cal");
+      const $ = sel => root.querySelector(sel);
+
+      const GROUPS = [
+        { name: "Dishes", rows: [
+          { name: "35 mm dish", area: 9, seed: 0.3, conf: 1.2, medium: "2 mL" },
+          { name: "60 mm dish", area: 21, seed: 0.8, conf: 3.2, medium: "3 mL" },
+          { name: "100 mm dish", area: 55, seed: 2.2, conf: 8.8, medium: "10 mL" },
+          { name: "150 mm dish", area: 152, seed: 5.0, conf: 20.0, medium: "20 mL" }
+        ]},
+        { name: "Culture Plates (per well)", rows: [
+          { name: "6-well plate", area: 9, seed: 0.3, conf: 1.2, medium: "3–5 mL" },
+          { name: "12-well plate", area: 4, seed: 0.1, conf: 0.4, medium: "1–2 mL" },
+          { name: "24-well plate", area: 2, seed: 0.05, conf: 0.2, medium: "0.5–1.0 mL" }
+        ]},
+        { name: "Flasks", rows: [
+          { name: "T-25 flask", area: 25, seed: 0.7, conf: 2.8, medium: "3–5 mL" },
+          { name: "T-75 flask", area: 75, seed: 2.1, conf: 8.4, medium: "8–15 mL" },
+          { name: "T-160 flask", area: 162, seed: 4.6, conf: 18.4, medium: "15–30 mL" }
+        ]}
+      ];
+      const FLAT = GROUPS.flatMap(g => g.rows);
+
+      const defaults = () => ({ vessel: 0, count: 1, cellNum: 1.0, cellExp: 6, target: FLAT[0].seed, targetExp: 6 });
+      let state = defaults();
+
+      const num = v => Number.isFinite(v) ? v.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "-";
+      const supDigits = { "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+      const sup = n => String(n).split("").map(c => supDigits[c] || c).join("");
+      const MIN_UL = 20; // 目安: これより少ない量は正確にピペッティングしにくいので希釈を勧める
+
+      function renderVesselOptions() {
+        const select = $("#vessel");
+        select.textContent = "";
+        let idx = 0;
+        GROUPS.forEach(group => {
+          const optgroup = document.createElement("optgroup");
+          optgroup.label = group.name;
+          group.rows.forEach(ref => {
+            const opt = document.createElement("option");
+            opt.value = idx++;
+            opt.textContent = ref.name;
+            optgroup.append(opt);
+          });
+          select.append(optgroup);
+        });
+      }
+
+      function renderRefTable() {
+        const body = $("#ref-body");
+        body.textContent = "";
+        GROUPS.forEach(group => {
+          const gtr = document.createElement("tr");
+          gtr.className = "group-row";
+          const gtd = document.createElement("td");
+          gtd.colSpan = 5;
+          gtd.textContent = group.name;
+          gtr.append(gtd);
+          body.append(gtr);
+
+          group.rows.forEach(ref => {
+            const tr = document.createElement("tr");
+            tr.id = `ref-row-${FLAT.indexOf(ref)}`;
+            const cell = (text, cls) => {
+              const td = document.createElement("td");
+              if (cls) td.className = cls;
+              td.textContent = text;
+              tr.append(td);
+            };
+            cell(ref.name, "vessel");
+            cell(`${num(ref.area)} cm²`);
+            cell(`${num(ref.seed)} ×10⁶`);
+            cell(`${num(ref.conf)} ×10⁶`);
+            cell(ref.medium, "medium-ref");
+            body.append(tr);
+          });
+        });
+      }
+
+      function update() {
+        const vessel = FLAT[state.vessel];
+        const count = Number(state.count);
+        const stockConc = Number(state.cellNum) * (10 ** Number(state.cellExp)); // cells/mL
+        const targetCells = Number(state.target) * (10 ** Number(state.targetExp)); // cells / vessel
+        const volMl = stockConc > 0 ? targetCells / stockConc : NaN;
+        const volUl = volMl * 1000;
+        const totalVolMl = volMl * count;
+
+        let dilute = null, pipetteUl = volUl;
+        if (Number.isFinite(volUl) && volUl > 0 && volUl < MIN_UL) {
+          dilute = Math.ceil(MIN_UL / volUl);
+          pipetteUl = volUl * dilute;
+        }
+        const amountJa = dilute
+          ? `${num(pipetteUl)} µL（原液を${dilute}倍希釈後）`
+          : (volUl < 1000 ? `${num(volUl)} µL` : `${num(volMl)} mL`);
+        const amountEn = dilute
+          ? `${num(pipetteUl)} µL (after diluting the stock ${dilute}×)`
+          : (volUl < 1000 ? `${num(volUl)} µL` : `${num(volMl)} mL`);
+
+        $("#howto").innerHTML = !Number.isFinite(volMl) ? "" : `
+          <p>${vessel.name} に <strong>${amountJa}</strong> をまく。合計 <strong>${num(totalVolMl)} mL</strong> 必要（${count}枚分）。</p>
+          <p>Add <strong>${amountEn}</strong> to each ${vessel.name}. <strong>${num(totalVolMl)} mL</strong> needed in total (for ${count} vessel(s)).</p>
+        `;
+
+        root.querySelectorAll("#ref-body tr.current").forEach(tr => tr.classList.remove("current"));
+        const row = root.querySelector(`#ref-row-${state.vessel}`);
+        if (row) row.classList.add("current");
+
+        const warn = [];
+        if (!(stockConc > 0)) warn.push("Cell number を正の値で入力してください。 / Enter a positive cell number.");
+        if (!(count > 0)) warn.push("Number of vessels を正の値で入力してください。 / Enter a positive number of vessels.");
+        if (!(targetCells > 0)) warn.push("Cells to seed / vessel を正の値で入力してください。 / Enter a positive number of cells to seed per vessel.");
+        $("#warn").hidden = warn.length === 0;
+        $("#warn").textContent = warn.join(" ");
+      }
+
+      $("#vessel").addEventListener("change", () => {
+        state.vessel = Number($("#vessel").value);
+        state.target = FLAT[state.vessel].seed;
+        state.targetExp = 6;
+        $("#target").value = state.target;
+        $("#target-exp").value = state.targetExp;
+        update();
+      });
+      $("#count").addEventListener("input", () => {
+        state.count = $("#count").value === "" ? NaN : Number($("#count").value);
+        update();
+      });
+      $("#target").addEventListener("input", () => {
+        state.target = $("#target").value === "" ? NaN : Number($("#target").value);
+        update();
+      });
+      $("#target-exp").addEventListener("input", () => {
+        state.targetExp = $("#target-exp").value === "" ? NaN : Number($("#target-exp").value);
+        update();
+      });
+      $("#cell-num").addEventListener("input", () => {
+        state.cellNum = $("#cell-num").value === "" ? NaN : Number($("#cell-num").value);
+        update();
+      });
+      $("#cell-exp").addEventListener("input", () => {
+        state.cellExp = $("#cell-exp").value === "" ? NaN : Number($("#cell-exp").value);
+        update();
+      });
+      $("#reset-all").addEventListener("click", () => {
+        state = defaults();
+        $("#vessel").value = state.vessel;
+        $("#count").value = state.count;
+        $("#target").value = state.target;
+        $("#target-exp").value = state.targetExp;
+        $("#cell-num").value = state.cellNum;
+        $("#cell-exp").value = state.cellExp;
+        update();
+      });
+      $("#print-page").addEventListener("click", () => window.print());
+
+      renderVesselOptions();
+      renderRefTable();
+      $("#target").value = state.target;
+      $("#target-exp").value = state.targetExp;
+      update();
+    })();
+  </script>
+</div>
+</body>
+</html>
