@@ -2,8 +2,9 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>Web Tools</title>
+<title>Labrixa</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="assets/logo.png">
 <style>
   :root {
     color-scheme: light dark;
@@ -47,12 +48,36 @@
     line-height: 1.45;
     -webkit-font-smoothing: antialiased;
   }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .brand-icon {
+    width: 84px;
+    height: 84px;
+    border-radius: 21px;
+    flex: 0 0 auto;
+  }
   h1 {
     margin: 0;
-    font-size: 40px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  h1 .wordmark {
+    display: block;
+    height: 42px;
+    width: auto;
+  }
+  h1 .tagline {
+    display: block;
+    color: var(--muted);
+    font-size: 18px;
+    font-weight: 500;
+    font-style: italic;
+    letter-spacing: -0.01em;
   }
   p.lead {
     margin: 10px 0 12px;
@@ -144,13 +169,18 @@
   footer a:hover { text-decoration: underline; }
   @media (max-width: 760px) {
     body { padding: 40px 16px 36px; }
-    h1 { font-size: 32px; }
+    h1 .wordmark { height: 32px; }
+    h1 .tagline { display: block; width: 100%; margin-top: 2px; font-size: 14px; }
+    .brand-icon { width: 64px; height: 64px; border-radius: 16px; }
     ul.tools > li { padding: 18px; }
   }
 </style>
 </head>
 <body>
-  <h1>Web Tools</h1>
+  <div class="brand">
+    <img class="brand-icon" src="assets/logo.png" alt="Labrixa">
+    <h1><img class="wordmark" src="assets/wordmark.png" alt="Labrixa"><span class="tagline">Scientific Tools &amp; Analysis</span></h1>
+  </div>
   <p class="lead">個人で作った静的Webツール一覧です。 / A collection of static web tools I made.</p>
   <p class="disclaimer">計算結果の正確性は保証しません。ご利用は自己責任でお願いします。 / No guarantee of accuracy is provided. Use at your own risk.</p>
 
