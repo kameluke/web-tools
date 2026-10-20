@@ -394,12 +394,26 @@
   tr.off td { color: var(--muted); }
   tr.total td { font-weight: 650; border-top: 1px solid var(--line); border-bottom: 0; }
   .lots-table { min-width: 820px; }
-  .result-table { min-width: 980px; }
   .hl { color: var(--accent); font-weight: 650; }
-  @media (max-width: 760px) { .lots-table, .result-table { min-width: 720px; } }
+  @media (max-width: 760px) { .lots-table { min-width: 720px; } }
+
+  /* result-table: fixed proportional columns so it always fits without horizontal scroll */
+  .result-table { table-layout: fixed; width: 100%; }
+  .result-table th, .result-table td { white-space: normal; word-break: break-word; }
+  .result-table th:nth-child(1), .result-table td:nth-child(1) { width: 19%; }
+  .result-table th:nth-child(2), .result-table td:nth-child(2) { width: 11%; }
+  .result-table th:nth-child(3), .result-table td:nth-child(3) { width: 10%; }
+  .result-table th:nth-child(4), .result-table td:nth-child(4) { width: 8%; }
+  .result-table th:nth-child(5), .result-table td:nth-child(5) { width: 9%; }
+  .result-table th:nth-child(6), .result-table td:nth-child(6) { width: 10%; }
+  .result-table th:nth-child(7), .result-table td:nth-child(7) { width: 9%; }
+  .result-table th:nth-child(8), .result-table td:nth-child(8) { width: 7%; }
+  .result-table th:nth-child(9), .result-table td:nth-child(9) { width: 11%; }
+  .result-table th:nth-child(10), .result-table td:nth-child(10) { width: 6%; }
+
   @media print {
     .table-wrap { overflow: visible; }
-    .lots-table, .result-table { min-width: 0; width: 100%; table-layout: fixed; }
+    .lots-table { min-width: 0; width: 100%; table-layout: fixed; }
     td input[type="text"] { width: 100%; min-width: 0; }
     td input.name { width: 100%; }
     td input.lot { width: 100%; }
@@ -412,6 +426,8 @@
     .lots-table th:nth-child(4), .lots-table td:nth-child(4) { width: 22%; }
     .lots-table th:nth-child(5), .lots-table td:nth-child(5) { width: 17%; }
     .lots-table th:nth-child(6), .lots-table td:nth-child(6) { width: 15%; }
+    .result-table { font-size: 8.5px; }
+    .result-table th, .result-table td { padding: 3px 3px; }
   }
 </style>
 </head>
@@ -512,13 +528,12 @@
             <th>Dilution</th>
             <th>gc</th>
             <th>Mice</th>
-            <th>Frozen left (µL)</th>
           </tr>
         </thead>
         <tbody id="result-body"></tbody>
       </table>
     </div>
-    <p class="note">各Lotを上記の量のPBS(-)で希釈すると、すべて目標titerになります。希釈後の液を合わせて、1匹あたりの投与量ずつ投与してください。Thaw は溶かすチューブの本数です（必要量以上で、溶かすウイルス量（gc）が最小になる組合せ）。溶かしたチューブに余りが出た場合は Thawed − Virus used で確認できます。Frozen left は未開封で残る原液量です。</p>
+    <p class="note">各Lotを上記の量のPBS(-)で希釈すると、すべて目標titerになります。希釈後の液を合わせて、1匹あたりの投与量ずつ投与してください。Thaw は溶かすチューブの本数です（必要量以上で、溶かすウイルス量（gc）が最小になる組合せ）。溶かしたチューブに余りが出た場合は Thawed − Virus used で確認できます。</p>
     <div class="status" id="copy-status"></div>
     <textarea id="copy-fallback" class="no-print" readonly hidden aria-label="dilution (manual copy)"></textarea>
   </div>
@@ -654,13 +669,12 @@
         const finalVol = valid ? injVol * n : NaN;
 
         const rows = s.lots.map(l => ({ name: l.name, lot: l.lot, mode: l.mode, eligible: false, tubes: parseTubes(l.volume), volume: NaN, titer: evalExpr(l.titer),
-          take: 0, pbs: 0, final: 0, gc: 0, mice: 0, thawed: 0, pick: null, left: NaN, tooDilute: false }));
+          take: 0, pbs: 0, final: 0, gc: 0, mice: 0, thawed: 0, pick: null, tooDilute: false }));
         rows.forEach(r => { r.volume = r.tubes && r.tubes.length ? r.tubes.reduce((a, g) => a + g.size * g.n, 0) : NaN; });
         let remaining = needGc;
         let totalStockGc = 0;
         if (valid) {
           rows.forEach(r => {
-            r.left = r.volume;
             if (r.mode === "skip" || !(r.volume > 0) || !(r.titer > 0)) return;
             if (r.titer < targetConc) { r.tooDilute = true; return; }
             r.eligible = true;
@@ -693,7 +707,6 @@
             r.final = r.gc / targetConc;
             r.pbs = r.final - r.take;
             r.mice = r.gc / dose;
-            r.left = r.volume - thawed;
             r.fold = r.titer / targetConc;
             remaining -= r.gc;
           });
@@ -762,8 +775,7 @@
             active ? vol(row.final) : "-",
             active ? `${num(row.fold, 2)}×` : "-",
             active ? sci(row.gc) : "-",
-            active ? num(row.mice, 1) : "-",
-            Number.isFinite(row.left) ? vol(row.left) : "-"
+            active ? num(row.mice, 1) : "-"
           ];
           cells.forEach((c, j) => {
             const td = document.createElement("td");
@@ -779,7 +791,7 @@
           const t = r.total;
           const tr = document.createElement("tr");
           tr.className = "total";
-          ["Total", "", "", vol(t.thawed), vol(t.take), vol(t.pbs), vol(t.final), "", sci(t.gc), num(t.mice, 1), ""].forEach(c => {
+          ["Total", "", "", vol(t.thawed), vol(t.take), vol(t.pbs), vol(t.final), "", sci(t.gc), num(t.mice, 1)].forEach(c => {
             const td = document.createElement("td");
             td.textContent = c;
             tr.append(td);
@@ -886,15 +898,15 @@
         const status = $("#copy-status");
         const fallback = $("#copy-fallback");
         if (!last.valid) { status.textContent = "Nothing to copy"; return; }
-        const header = ["Virus/Lot", "Titer(gc/uL)", "Thaw", "Thawed(uL)", "Virus used(uL)", "PBS(-)(uL)", "Final(uL)", "Dilution", "gc", "Mice", "Frozen left(uL)"];
+        const header = ["Virus/Lot", "Titer(gc/uL)", "Thaw", "Thawed(uL)", "Virus used(uL)", "PBS(-)(uL)", "Final(uL)", "Dilution", "gc", "Mice"];
         const used = last.rows.filter(r => r.take > 0);
         const f1 = v => Number(v.toFixed(1));
         const t = last.total;
         const text = [
           [`Dose ${sciPlain(last.dose)} gc/mouse`, `Inj ${last.injVol} uL`, `Mice ${last.mice}+${last.spare}`, `Target ${sciPlain(last.targetConc)} gc/uL`],
           header,
-          ...used.map(r => [lotLabel(r), sciPlain(r.titer), tubeText(r.pick.parts).replace(/µ/g, "u"), f1(r.thawed), f1(r.take), f1(r.pbs), f1(r.final), Number(r.fold.toFixed(2)), sciPlain(r.gc), f1(r.mice), f1(r.left)]),
-          ["Total", "", "", f1(t.thawed), f1(t.take), f1(t.pbs), f1(t.final), "", sciPlain(t.gc), f1(t.mice), ""]
+          ...used.map(r => [lotLabel(r), sciPlain(r.titer), tubeText(r.pick.parts).replace(/µ/g, "u"), f1(r.thawed), f1(r.take), f1(r.pbs), f1(r.final), Number(r.fold.toFixed(2)), sciPlain(r.gc), f1(r.mice)]),
+          ["Total", "", "", f1(t.thawed), f1(t.take), f1(t.pbs), f1(t.final), "", sciPlain(t.gc), f1(t.mice)]
         ].map(cols => cols.join("\t")).join("\n");
         try {
           await navigator.clipboard.writeText(text);
