@@ -391,6 +391,27 @@
   td.thaw { text-align: left; font-weight: 650; color: var(--accent); }
   td.chk { text-align: right; }
   td.chk select { width: 96px; text-align: right; text-align-last: right; }
+  td.row-del { padding-left: 8px; text-align: center; }
+  .row-del button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--fill);
+    color: var(--muted);
+    font: inherit;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, opacity 0.15s;
+  }
+  .row-del button:hover { background: rgba(215, 0, 21, 0.12); color: var(--bad); }
+  .row-del button:active { opacity: 0.7; }
+  .row-del button:disabled { visibility: hidden; }
   tr.off td { color: var(--muted); }
   tr.total td { font-weight: 650; border-top: 1px solid var(--line); border-bottom: 0; }
   .lots-table { min-width: 820px; }
@@ -486,7 +507,6 @@
       <h3>Virus lots</h3>
       <div class="actions no-print">
         <button type="button" class="btn" id="add-lot">Add lot</button>
-        <button type="button" class="btn" id="remove-lot">Remove lot</button>
       </div>
     </div>
     <div class="table-wrap">
@@ -499,6 +519,7 @@
             <th style="text-align:left"></th>
             <th>Titer (gc/µL)</th>
             <th>Use</th>
+            <th class="no-print"></th>
           </tr>
         </thead>
         <tbody id="lots-body"></tbody>
@@ -753,6 +774,18 @@
           sel.setAttribute("aria-label", `use lot ${i + 1}`);
           sel.addEventListener("change", () => { l.mode = sel.value; update(); });
           cell(sel, "chk");
+          const del = document.createElement("button");
+          del.type = "button";
+          del.textContent = "✕";
+          del.disabled = state.lots.length <= 1;
+          del.setAttribute("aria-label", `remove lot ${i + 1}`);
+          del.addEventListener("click", () => {
+            if (state.lots.length <= 1) return;
+            state.lots.splice(i, 1);
+            renderLots();
+            update();
+          });
+          cell(del, "row-del no-print");
           body.append(tr);
         });
       }
@@ -876,12 +909,6 @@
       });
       $("#add-lot").addEventListener("click", () => {
         state.lots.push({ name: "", lot: "", volume: "", titer: "", mode: "auto" });
-        renderLots();
-        update();
-      });
-      $("#remove-lot").addEventListener("click", () => {
-        if (state.lots.length <= 1) return;
-        state.lots.pop();
         renderLots();
         update();
       });
