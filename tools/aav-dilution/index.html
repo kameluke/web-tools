@@ -124,6 +124,8 @@
   .panel-header h3 { margin: 0; }
   .panel-header .actions { margin: 0; }
 
+  #viruses { display: grid; gap: 16px; }
+
   /* ---------- Form ---------- */
   .form {
     display: grid;
@@ -214,6 +216,28 @@
   .btn.text { background: transparent; }
   .btn.text:hover { background: var(--accent-soft); }
 
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--fill);
+    color: var(--muted);
+    font: inherit;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, opacity 0.15s;
+  }
+  .icon-btn.sm { width: 22px; height: 22px; font-size: 14px; }
+  .icon-btn:hover { background: rgba(215, 0, 21, 0.12); color: var(--bad); }
+  .icon-btn:active { opacity: 0.7; }
+  .icon-btn:disabled { visibility: hidden; }
+
   /* ---------- Calculation steps ---------- */
   .metrics {
     display: grid;
@@ -246,6 +270,7 @@
   .steps .caption:first-child { margin-top: 0; }
   .steps .caption.last { margin-top: 2px; color: var(--ink); font-weight: 600; }
   .steps .fn-ref { margin-left: 1px; color: var(--muted); font-size: 9px; vertical-align: super; line-height: 0; }
+  .bad { color: var(--bad); font-weight: 600; }
   /* 註 */
   ol.footnotes { margin: 14px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 11px; }
   ol.footnotes li { display: flex; gap: 4px; }
@@ -272,8 +297,6 @@
   td input[type="number"] { width: 76px; text-align: right; }
   td.copies { font-weight: 650; }
   td.src { color: var(--muted); text-align: left; }
-  tr.bad-row td { color: var(--bad); }
-  .bad { color: var(--bad); font-weight: 600; }
   .red { color: var(--bad); }
   .tube {
     display: inline-flex;
@@ -332,7 +355,6 @@
     .top { grid-template-columns: 1fr; }
     .panel { padding: 18px; }
     .form { grid-template-columns: 110px minmax(0, 1fr); }
-    .dilution-table { min-width: 640px; }
   }
 
   /* ---------- Print: A4, one page ---------- */
@@ -350,6 +372,7 @@
     .app-head { padding: 0 0 2px; }
     .app-title { font-size: 18px; }
     .top { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+    #viruses { gap: 8px; }
     .panel { padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; break-inside: avoid; }
     h3 { margin: 0 0 6px; font-size: 13px; }
     .panel-header { margin-bottom: 6px; }
@@ -359,6 +382,7 @@
     .metric span { font-size: 10px; }
     .metric strong { font-size: 14px; }
     .steps { gap: 2px 6px; font-size: 11px; }
+    .steps .lhs { max-width: 150px; white-space: normal; }
     table { font-size: 11px; }
     th, td { padding: 3px 5px; }
     td input[type="number"] { width: 48px; }
@@ -376,6 +400,7 @@
     }
     select { background-image: none; padding-right: 0; }
     .note { font-size: 9px; margin-top: 4px; }
+    .combine-box { margin-top: 6px; padding: 6px 8px; font-size: 10px; }
     ol.footnotes { margin-top: 6px; font-size: 9px; }
   }
 </style>
@@ -383,8 +408,7 @@
   /* AAV Dilution 固有 */
   td input[type="text"] { width: 110px; text-align: right; }
   td input.lot { width: 120px; text-align: left; }
-  td input.name { width: 200px; text-align: left; }
-  .lots-table th:nth-child(2), .lots-table td:nth-child(2) { text-align: left; }
+  .lots-table th:nth-child(1), .lots-table td:nth-child(1) { text-align: left; }
   td input.titer { width: 100px; }
   td.evald { color: var(--muted); font-size: 12px; text-align: left; white-space: nowrap; }
   .steps .rule { grid-column: 1 / -1; height: 1px; margin: 8px 0 2px; background: var(--line); }
@@ -392,61 +416,50 @@
   td.chk { text-align: right; }
   td.chk select { width: 96px; text-align: right; text-align-last: right; }
   td.row-del { padding-left: 8px; text-align: center; }
-  .row-del button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    padding: 0;
-    border: 0;
-    border-radius: 50%;
-    background: var(--fill);
-    color: var(--muted);
-    font: inherit;
-    font-size: 14px;
-    line-height: 1;
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s, opacity 0.15s;
-  }
-  .row-del button:hover { background: rgba(215, 0, 21, 0.12); color: var(--bad); }
-  .row-del button:active { opacity: 0.7; }
-  .row-del button:disabled { visibility: hidden; }
   tr.off td { color: var(--muted); }
+  tr.subtotal td { color: var(--muted); font-weight: 650; border-top: 1px solid var(--line); }
   tr.total td { font-weight: 650; border-top: 1px solid var(--line); border-bottom: 0; }
-  .lots-table { min-width: 820px; }
+  tr.group-row td { padding-top: 14px; border-bottom: 1px solid var(--line); color: var(--accent); font-size: 12px; font-weight: 650; }
+  tr.group-row:first-child td { padding-top: 0; }
+  .lots-table { min-width: 680px; }
   .hl { color: var(--accent); font-weight: 650; }
-  @media (max-width: 760px) { .lots-table { min-width: 720px; } }
+  .combine-box {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--accent-soft);
+    color: var(--ink);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .combine-box b { color: var(--accent); font-weight: 650; }
+  .combine-box[hidden] { display: none; }
+  @media (max-width: 760px) { .lots-table { min-width: 600px; } }
 
   /* result-table: fixed proportional columns so it always fits without horizontal scroll */
   .result-table { table-layout: fixed; width: 100%; }
   .result-table th, .result-table td { white-space: normal; word-break: break-word; }
-  .result-table th:nth-child(1), .result-table td:nth-child(1) { width: 19%; }
-  .result-table th:nth-child(2), .result-table td:nth-child(2) { width: 11%; }
-  .result-table th:nth-child(3), .result-table td:nth-child(3) { width: 10%; }
-  .result-table th:nth-child(4), .result-table td:nth-child(4) { width: 8%; }
-  .result-table th:nth-child(5), .result-table td:nth-child(5) { width: 9%; }
-  .result-table th:nth-child(6), .result-table td:nth-child(6) { width: 10%; }
-  .result-table th:nth-child(7), .result-table td:nth-child(7) { width: 9%; }
-  .result-table th:nth-child(8), .result-table td:nth-child(8) { width: 7%; }
-  .result-table th:nth-child(9), .result-table td:nth-child(9) { width: 11%; }
-  .result-table th:nth-child(10), .result-table td:nth-child(10) { width: 6%; }
+  .result-table th:nth-child(1), .result-table td:nth-child(1) { width: 16%; }
+  .result-table th:nth-child(2), .result-table td:nth-child(2) { width: 13%; }
+  .result-table th:nth-child(3), .result-table td:nth-child(3) { width: 16%; }
+  .result-table th:nth-child(4), .result-table td:nth-child(4) { width: 12%; }
+  .result-table th:nth-child(5), .result-table td:nth-child(5) { width: 14%; }
+  .result-table th:nth-child(6), .result-table td:nth-child(6) { width: 15%; }
+  .result-table th:nth-child(7), .result-table td:nth-child(7) { width: 14%; }
 
   @media print {
     .table-wrap { overflow: visible; }
     .lots-table { min-width: 0; width: 100%; table-layout: fixed; }
     td input[type="text"] { width: 100%; min-width: 0; }
-    td input.name { width: 100%; }
     td input.lot { width: 100%; }
     td input.titer { width: 100%; }
     td.evald { font-size: 9px; white-space: normal; }
     td.chk select { width: 100%; text-align: right; text-align-last: right; }
-    .lots-table th:nth-child(1), .lots-table td:nth-child(1) { width: 20%; }
-    .lots-table th:nth-child(2), .lots-table td:nth-child(2) { width: 13%; }
-    .lots-table th:nth-child(3), .lots-table td:nth-child(3) { width: 13%; }
-    .lots-table th:nth-child(4), .lots-table td:nth-child(4) { width: 22%; }
-    .lots-table th:nth-child(5), .lots-table td:nth-child(5) { width: 17%; }
-    .lots-table th:nth-child(6), .lots-table td:nth-child(6) { width: 15%; }
+    .lots-table th:nth-child(1), .lots-table td:nth-child(1) { width: 18%; }
+    .lots-table th:nth-child(2), .lots-table td:nth-child(2) { width: 16%; }
+    .lots-table th:nth-child(3), .lots-table td:nth-child(3) { width: 28%; }
+    .lots-table th:nth-child(4), .lots-table td:nth-child(4) { width: 20%; }
+    .lots-table th:nth-child(5), .lots-table td:nth-child(5) { width: 18%; }
     .result-table { font-size: 8.5px; }
     .result-table th, .result-table td { padding: 3px 3px; }
   }
@@ -474,59 +487,38 @@
         <label for="date">Date</label>
         <input type="date" id="date" data-key="date">
         <div class="sep"></div>
-        <label for="dose">Dose</label>
-        <div class="field"><input type="text" id="dose" data-key="dose" inputmode="decimal"><span class="unit">gc / mouse</span></div>
         <label for="inj-vol">Injection volume</label>
         <div class="field"><input type="number" id="inj-vol" data-key="injVol" min="0" step="any"><span class="unit">µL / mouse</span></div>
         <label for="mice" class="strong">Mice</label>
         <div class="field"><input type="number" id="mice" data-key="mice" min="0" step="1"><span class="unit">匹</span></div>
         <label for="spare">Spare</label>
         <div class="field"><input type="number" id="spare" data-key="spare" min="0" step="any"><span class="unit">匹分（ロス見込み）</span></div>
-        <label>Target titer</label>
-        <div class="field"><span class="computed" id="target-conc">-</span><span class="unit">gc / µL</span></div>
         <label>Diluent</label>
         <div class="field"><span class="computed">PBS(-)</span></div>
       </div>
+      <div class="note">複数のウイルスを投与条件・混ぜる場合は、下の「Viruses」でウイルスごとにDoseを設定してください。全ウイルスを混合し、Injection volumeに達するまでPBS(-)で満たします。</div>
       <div class="warn-box" id="input-warn" hidden></div>
     </div>
 
     <div class="panel">
       <h3>計算</h3>
       <div class="metrics">
-        <div class="metric"><span>必要なウイルス量</span><strong id="m-gc">-</strong></div>
         <div class="metric"><span>調製する総液量</span><strong id="m-final">-</strong></div>
-        <div class="metric"><span>使用するウイルス原液</span><strong id="m-virus">-</strong></div>
+        <div class="metric"><span>使用するウイルス原液（合計）</span><strong id="m-virus">-</strong></div>
         <div class="metric"><span>加えるPBS(-)</span><strong id="m-pbs">-</strong></div>
+        <div class="metric"><span>投与可能匹数</span><strong id="m-mice">-</strong></div>
       </div>
       <div class="steps" id="steps"></div>
     </div>
   </div>
 
-  <div class="panel">
-    <div class="panel-header">
-      <h3>Virus lots</h3>
-      <div class="actions no-print">
-        <button type="button" class="btn" id="add-lot">Add lot</button>
-      </div>
+  <div class="panel-header">
+    <h3>Viruses</h3>
+    <div class="actions no-print">
+      <button type="button" class="btn" id="add-virus">Add virus</button>
     </div>
-    <div class="table-wrap">
-      <table class="lots-table" aria-label="virus lots">
-        <thead>
-          <tr>
-            <th>Virus name</th>
-            <th>Lot</th>
-            <th>Volume (µL)</th>
-            <th style="text-align:left"></th>
-            <th>Titer (gc/µL)</th>
-            <th>Use</th>
-            <th class="no-print"></th>
-          </tr>
-        </thead>
-        <tbody id="lots-body"></tbody>
-      </table>
-    </div>
-    <p class="note">Volume は分注の構成を「1本の量*本数」で入力します（例: <code>100*6</code>、<code>50*8+31*1</code>）。Titer は <code>2.14E+10</code> のように入力できます。Use は「自動」（全Lotから、溶かすウイルスが最小になる組合せを選ぶ）、「優先」（先に使う。優先Lotだけで足りればその中から選ぶ）、「使わない」から選びます。</p>
   </div>
+  <div id="viruses"></div>
 
   <div class="panel">
     <div class="panel-header">
@@ -539,14 +531,11 @@
       <table class="result-table" aria-label="dilution">
         <thead>
           <tr>
-            <th>Virus / Lot</th>
+            <th>Lot</th>
             <th>Titer (gc/µL)</th>
             <th style="text-align:left">Thaw (tubes)</th>
             <th>Thawed (µL)</th>
             <th>Virus used (µL)</th>
-            <th>PBS(-) (µL)</th>
-            <th>Final (µL)</th>
-            <th>Dilution</th>
             <th>gc</th>
             <th>Mice</th>
           </tr>
@@ -554,7 +543,8 @@
         <tbody id="result-body"></tbody>
       </table>
     </div>
-    <p class="note">各Lotを上記の量のPBS(-)で希釈すると、すべて目標titerになります。希釈後の液を合わせて、1匹あたりの投与量ずつ投与してください。Thaw は溶かすチューブの本数です（必要量以上で、溶かすウイルス量（gc）が最小になる組合せ）。溶かしたチューブに余りが出た場合は Thawed − Virus used で確認できます。</p>
+    <div class="combine-box" id="combine"></div>
+    <p class="note">Thaw は溶かすチューブの本数です（必要量以上で、溶かすウイルス量（gc）が最小になる組合せ）。溶かしたチューブに余りが出た場合は Thawed − Virus used で確認できます。</p>
     <div class="status" id="copy-status"></div>
     <textarea id="copy-fallback" class="no-print" readonly hidden aria-label="dilution (manual copy)"></textarea>
   </div>
@@ -569,6 +559,7 @@
   <details class="changelog">
     <summary>Changelog</summary>
     <ul>
+      <li><span class="ver">v2.0</span><span class="date">2026/10/23</span><span>Support multiple viruses mixed into one shared final volume</span></li>
       <li><span class="ver">v1.0</span><span class="date">2026/10/08</span><span>First release</span></li>
     </ul>
   </details>
@@ -582,16 +573,19 @@
         const d = new Date();
         return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
       };
+      const defaultLot = (lot = "", volume = "", titer = "", mode = "auto") => ({ lot, volume, titer, mode });
+      const defaultVirus = (name = "", dose = "", lots) => ({ name, dose, lots: lots && lots.length ? lots : [defaultLot()] });
       const defaults = () => ({
         expName: "",
         date: today(),
-        dose: "1.5E+12",
         injVol: 100,
         mice: 10,
         spare: 0,
-        lots: [
-          { name: "", lot: "#260812", volume: "100*6", titer: "2.14E+10", mode: "auto" },
-          { name: "", lot: "#260909", volume: "50*8+31*1", titer: "2.63E+10", mode: "auto" }
+        viruses: [
+          defaultVirus("", "1.5E+12", [
+            defaultLot("#260812", "100*6", "2.14E+10"),
+            defaultLot("#260909", "50*8+31*1", "2.63E+10")
+          ])
         ]
       });
       let state = defaults();
@@ -673,31 +667,25 @@
       const sciPlain = v => Number.isFinite(v) ? v.toExponential(2).toUpperCase().replace(/E\+?/, "E+").replace("E+-", "E-") : "";
       const num = (v, max = 2) => Number.isFinite(v) ? v.toLocaleString("en-US", { maximumFractionDigits: max }) : "-";
       const vol = v => Number.isFinite(v) ? v.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "-";
-      const lotLabel = (r, i = 0) => [r.name, r.lot].filter(Boolean).join(" ") || `(lot ${i + 1})`;
+      const lotLabel = (l, i = 0) => (l.lot || "").trim() || `(lot ${i + 1})`;
       const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
       // ---------- Calculation ----------
-      function compute() {
-        const s = state;
-        const dose = evalExpr(s.dose);
-        const injVol = Number(s.injVol);
-        const mice = Number(s.mice) || 0;
-        const spare = Number(s.spare) || 0;
-        const n = mice + spare;
-        const valid = dose > 0 && injVol > 0 && n > 0;
-        const targetConc = valid ? dose / injVol : NaN;      // gc/µL
+      // 1種のウイルス（複数Lot可）について、必要gcを満たす最小の希釈プランを求める
+      function computeVirus(v, n, injVol) {
+        const dose = evalExpr(v.dose);
+        const valid = dose > 0 && n > 0;
+        const targetConc = (dose > 0 && injVol > 0) ? dose / injVol : NaN; // 参考値（このウイルスだけで全量を占める場合の濃度）
         const needGc = valid ? dose * n : NaN;
-        const finalVol = valid ? injVol * n : NaN;
 
-        const rows = s.lots.map(l => ({ name: l.name, lot: l.lot, mode: l.mode, eligible: false, tubes: parseTubes(l.volume), volume: NaN, titer: evalExpr(l.titer),
-          take: 0, pbs: 0, final: 0, gc: 0, mice: 0, thawed: 0, pick: null, tooDilute: false }));
+        const rows = v.lots.map(l => ({ lot: l.lot, mode: l.mode, eligible: false, tubes: parseTubes(l.volume), volume: NaN, titer: evalExpr(l.titer),
+          take: 0, gc: 0, mice: 0, thawed: 0, pick: null }));
         rows.forEach(r => { r.volume = r.tubes && r.tubes.length ? r.tubes.reduce((a, g) => a + g.size * g.n, 0) : NaN; });
         let remaining = needGc;
         let totalStockGc = 0;
         if (valid) {
           rows.forEach(r => {
             if (r.mode === "skip" || !(r.volume > 0) || !(r.titer > 0)) return;
-            if (r.titer < targetConc) { r.tooDilute = true; return; }
             r.eligible = true;
             totalStockGc += r.volume * r.titer;
           });
@@ -710,7 +698,7 @@
           if (first.length && firstGc < needGc) {
             first.forEach(r => plan.set(r, r.tubes.map(g => g.n)));
             const sub = planThaw(rest, needGc - firstGc);
-            sub.forEach((v, k) => plan.set(k, v));
+            sub.forEach((val, k) => plan.set(k, val));
           } else {
             plan = planThaw(first.length ? first : eligible, needGc);
           }
@@ -725,139 +713,281 @@
             r.thawed = thawed;
             r.gc = Math.min(thawed * r.titer, Math.max(remaining, 0));
             r.take = r.gc / r.titer;
-            r.final = r.gc / targetConc;
-            r.pbs = r.final - r.take;
             r.mice = r.gc / dose;
-            r.fold = r.titer / targetConc;
             remaining -= r.gc;
           });
         }
         const short = valid && remaining > needGc * 1e-9;
-        const total = rows.reduce((a, r) => ({ take: a.take + r.take, pbs: a.pbs + r.pbs, final: a.final + r.final, gc: a.gc + r.gc, mice: a.mice + r.mice }),
-          { take: 0, pbs: 0, final: 0, gc: 0, mice: 0 });
+        const total = rows.reduce((a, r) => ({ take: a.take + r.take, gc: a.gc + r.gc, mice: a.mice + r.mice }), { take: 0, gc: 0, mice: 0 });
         total.thawed = rows.reduce((a, r) => a + (r.thawed || 0), 0);
         const maxMice = valid ? Math.floor(totalStockGc / dose + 1e-9) : 0;
-        return { dose, injVol, mice, spare, n, valid, targetConc, needGc, finalVol, rows, total, short, shortGc: remaining, maxMice };
+        return { name: v.name, dose, valid, targetConc, needGc, rows, total, short, shortGc: remaining, maxMice };
+      }
+
+      // 複数ウイルスを、共通のInjection volumeに混ぜ合わせる
+      function compute() {
+        const injVol = Number(state.injVol);
+        const mice = Number(state.mice) || 0;
+        const spare = Number(state.spare) || 0;
+        const n = mice + spare;
+        const validTop = injVol > 0 && n > 0;
+        const finalVol = validTop ? injVol * n : NaN;
+
+        const viruses = state.viruses.map(v => computeVirus(v, n, injVol));
+        const totalTake = viruses.reduce((a, v) => a + v.total.take, 0);
+        const totalThawed = viruses.reduce((a, v) => a + v.total.thawed, 0);
+        const totalGc = viruses.reduce((a, v) => a + v.total.gc, 0);
+        const pbs = validTop ? finalVol - totalTake : NaN;
+        const over = validTop && pbs < -1e-9;
+        const deliverable = validTop ? Math.min(n, ...viruses.map(v => v.valid ? v.maxMice : 0)) : 0;
+
+        return { injVol, mice, spare, n, validTop, finalVol, viruses, totalTake, totalThawed, totalGc, pbs, over, deliverable };
       }
 
       // ---------- Rendering ----------
-      function renderLots() {
-        const body = $("#lots-body");
-        body.textContent = "";
-        state.lots.forEach((l, i) => {
-          const tr = document.createElement("tr");
-          const cell = (content, cls) => {
-            const td = document.createElement("td");
-            if (cls) td.className = cls;
-            if (content instanceof Node) td.append(content); else td.textContent = content;
-            tr.append(td);
-            return td;
-          };
-          const input = (key, cls, type = "text") => {
-            const el = document.createElement("input");
-            el.type = type;
-            el.className = cls;
-            el.value = l[key];
-            el.setAttribute("aria-label", `lot ${i + 1} ${key}`);
-            if (key !== "lot" && key !== "name") el.inputMode = "decimal";
-            el.addEventListener("input", () => { l[key] = el.value; update(); });
-            return el;
-          };
-          cell(input("name", "name"));
-          cell(input("lot", "lot"));
-          cell(input("volume", "vol"));
-          cell("", "evald");
-          cell(input("titer", "titer"));
-          const sel = document.createElement("select");
-          [["auto", "自動"], ["first", "優先"], ["skip", "使わない"]].forEach(([v, t]) => sel.append(new Option(t, v)));
-          sel.value = l.mode;
-          sel.setAttribute("aria-label", `use lot ${i + 1}`);
-          sel.addEventListener("change", () => { l.mode = sel.value; update(); });
-          cell(sel, "chk");
-          const del = document.createElement("button");
-          del.type = "button";
-          del.textContent = "✕";
-          del.disabled = state.lots.length <= 1;
-          del.setAttribute("aria-label", `remove lot ${i + 1}`);
-          del.addEventListener("click", () => {
-            if (state.lots.length <= 1) return;
-            state.lots.splice(i, 1);
-            renderLots();
+      function renderViruses() {
+        const container = $("#viruses");
+        container.textContent = "";
+        state.viruses.forEach((v, vi) => {
+          const panel = document.createElement("div");
+          panel.className = "panel virus-panel";
+
+          const header = document.createElement("div");
+          header.className = "panel-header";
+          const h3 = document.createElement("h3");
+          h3.textContent = `Virus ${vi + 1}`;
+          header.append(h3);
+          const actions = document.createElement("div");
+          actions.className = "actions no-print";
+          const addLotBtn = document.createElement("button");
+          addLotBtn.type = "button";
+          addLotBtn.className = "btn";
+          addLotBtn.textContent = "Add lot";
+          addLotBtn.addEventListener("click", () => { v.lots.push(defaultLot()); renderViruses(); update(); });
+          const delVirusBtn = document.createElement("button");
+          delVirusBtn.type = "button";
+          delVirusBtn.className = "icon-btn";
+          delVirusBtn.textContent = "✕";
+          delVirusBtn.disabled = state.viruses.length <= 1;
+          delVirusBtn.setAttribute("aria-label", `remove virus ${vi + 1}`);
+          delVirusBtn.addEventListener("click", () => {
+            if (state.viruses.length <= 1) return;
+            state.viruses.splice(vi, 1);
+            renderViruses();
             update();
           });
-          cell(del, "row-del no-print");
-          body.append(tr);
+          actions.append(addLotBtn, delVirusBtn);
+          header.append(actions);
+          panel.append(header);
+
+          const form = document.createElement("div");
+          form.className = "form";
+
+          const nameLabel = document.createElement("label");
+          nameLabel.textContent = "Name";
+          const nameInput = document.createElement("input");
+          nameInput.type = "text";
+          nameInput.className = "virus-name";
+          nameInput.placeholder = "e.g. AAV-GFP";
+          nameInput.value = v.name;
+          nameInput.setAttribute("aria-label", `virus ${vi + 1} name`);
+          nameInput.addEventListener("input", () => { v.name = nameInput.value; update(); });
+
+          const doseLabel = document.createElement("label");
+          doseLabel.textContent = "Dose";
+          const doseField = document.createElement("div");
+          doseField.className = "field";
+          const doseInput = document.createElement("input");
+          doseInput.type = "text";
+          doseInput.className = "virus-dose";
+          doseInput.inputMode = "decimal";
+          doseInput.value = v.dose;
+          doseInput.setAttribute("aria-label", `virus ${vi + 1} dose`);
+          doseInput.addEventListener("input", () => { v.dose = doseInput.value; update(); });
+          const doseUnit = document.createElement("span");
+          doseUnit.className = "unit";
+          doseUnit.textContent = "gc / mouse";
+          doseField.append(doseInput, doseUnit);
+
+          const targetLabel = document.createElement("label");
+          targetLabel.textContent = "Target titer";
+          const targetField = document.createElement("div");
+          targetField.className = "field";
+          const targetSpan = document.createElement("span");
+          targetSpan.className = "computed virus-target";
+          targetSpan.textContent = "-";
+          const targetUnit = document.createElement("span");
+          targetUnit.className = "unit";
+          targetUnit.textContent = "gc / µL";
+          targetField.append(targetSpan, targetUnit);
+
+          form.append(nameLabel, nameInput, doseLabel, doseField, targetLabel, targetField);
+          panel.append(form);
+
+          const wrap = document.createElement("div");
+          wrap.className = "table-wrap";
+          const table = document.createElement("table");
+          table.className = "lots-table";
+          table.setAttribute("aria-label", `virus ${vi + 1} lots`);
+          const thead = document.createElement("thead");
+          thead.innerHTML = `
+            <tr>
+              <th>Lot</th>
+              <th>Volume (µL)</th>
+              <th style="text-align:left"></th>
+              <th>Titer (gc/µL)</th>
+              <th>Use</th>
+              <th class="no-print"></th>
+            </tr>
+          `;
+          table.append(thead);
+          const tbody = document.createElement("tbody");
+          v.lots.forEach((l, li) => {
+            const tr = document.createElement("tr");
+            const cell = (content, cls) => {
+              const td = document.createElement("td");
+              if (cls) td.className = cls;
+              if (content instanceof Node) td.append(content); else td.textContent = content;
+              tr.append(td);
+              return td;
+            };
+            const input = (key, cls) => {
+              const el = document.createElement("input");
+              el.type = "text";
+              el.className = cls;
+              el.value = l[key];
+              el.setAttribute("aria-label", `virus ${vi + 1} lot ${li + 1} ${key}`);
+              if (key !== "lot") el.inputMode = "decimal";
+              el.addEventListener("input", () => { l[key] = el.value; update(); });
+              return el;
+            };
+            cell(input("lot", "lot"));
+            cell(input("volume", "vol"));
+            cell("", "evald");
+            cell(input("titer", "titer"));
+            const sel = document.createElement("select");
+            [["auto", "自動"], ["first", "優先"], ["skip", "使わない"]].forEach(([val, t]) => sel.append(new Option(t, val)));
+            sel.value = l.mode;
+            sel.setAttribute("aria-label", `virus ${vi + 1} lot ${li + 1} use`);
+            sel.addEventListener("change", () => { l.mode = sel.value; update(); });
+            cell(sel, "chk");
+            const del = document.createElement("button");
+            del.type = "button";
+            del.className = "icon-btn sm";
+            del.textContent = "✕";
+            del.disabled = v.lots.length <= 1;
+            del.setAttribute("aria-label", `remove virus ${vi + 1} lot ${li + 1}`);
+            del.addEventListener("click", () => {
+              if (v.lots.length <= 1) return;
+              v.lots.splice(li, 1);
+              renderViruses();
+              update();
+            });
+            cell(del, "row-del no-print");
+            tbody.append(tr);
+          });
+          table.append(tbody);
+          wrap.append(table);
+          panel.append(wrap);
+
+          const note = document.createElement("p");
+          note.className = "note";
+          note.innerHTML = `Volume は分注の構成を「1本の量*本数」で入力します（例: <code>100*6</code>、<code>50*8+31*1</code>）。Titer は <code>2.14E+10</code> のように入力できます。Use は「自動」（全Lotから、溶かすウイルスが最小になる組合せを選ぶ）、「優先」（先に使う。優先Lotだけで足りればその中から選ぶ）、「使わない」から選びます。`;
+          panel.append(note);
+
+          const warn = document.createElement("div");
+          warn.className = "warn-box virus-warn";
+          warn.hidden = true;
+          panel.append(warn);
+
+          container.append(panel);
         });
       }
 
       function renderResults(r) {
         const body = $("#result-body");
         body.textContent = "";
-        r.rows.forEach((row, i) => {
+        const addRow = (cells, cls) => {
           const tr = document.createElement("tr");
-          const active = row.take > 0;
-          if (row.mode === "skip" || (!active && !row.tooDilute)) tr.className = "off";
-          if (row.tooDilute) tr.className = "bad-row";
-          const cells = [
-            lotLabel(row, i),
-            sci(row.titer),
-            active ? tubeText(row.pick.parts) : "-",
-            active ? vol(row.thawed) : "-",
-            active ? vol(row.take) : "-",
-            active ? vol(row.pbs) : "-",
-            active ? vol(row.final) : "-",
-            active ? `${num(row.fold, 2)}×` : "-",
-            active ? sci(row.gc) : "-",
-            active ? num(row.mice, 1) : "-"
-          ];
+          if (cls) tr.className = cls;
           cells.forEach((c, j) => {
             const td = document.createElement("td");
             td.textContent = c;
             if (j === 2) td.classList.add("thaw");
-            if (j === 4 || j === 5) td.classList.add("copies");
+            if (j === 4) td.classList.add("copies");
             tr.append(td);
           });
-          if (row.tooDilute) tr.children[1].classList.add("bad");
           body.append(tr);
+        };
+        r.viruses.forEach((v, vi) => {
+          const gtr = document.createElement("tr");
+          gtr.className = "group-row";
+          const gtd = document.createElement("td");
+          gtd.colSpan = 7;
+          gtd.textContent = `${v.name || `Virus ${vi + 1}`} ・ Dose ${sci(v.dose)} gc/mouse`;
+          gtr.append(gtd);
+          body.append(gtr);
+
+          v.rows.forEach((row, li) => {
+            const active = row.take > 0;
+            addRow([
+              lotLabel(row, li),
+              sci(row.titer),
+              active ? tubeText(row.pick.parts) : "-",
+              active ? vol(row.thawed) : "-",
+              active ? vol(row.take) : "-",
+              active ? sci(row.gc) : "-",
+              active ? num(row.mice, 1) : "-"
+            ], row.mode === "skip" || !active ? "off" : "");
+          });
+          if (v.valid) {
+            addRow(["Subtotal", "", "", vol(v.total.thawed), vol(v.total.take), sci(v.total.gc), num(v.total.mice, 1)], "subtotal");
+          }
         });
-        if (r.valid) {
-          const t = r.total;
-          const tr = document.createElement("tr");
-          tr.className = "total";
-          ["Total", "", "", vol(t.thawed), vol(t.take), vol(t.pbs), vol(t.final), "", sci(t.gc), num(t.mice, 1)].forEach(c => {
-            const td = document.createElement("td");
-            td.textContent = c;
-            tr.append(td);
-          });
-          body.append(tr);
+        if (r.validTop) {
+          addRow(["Total", "", "", vol(r.totalThawed), vol(r.totalTake), sci(r.totalGc), "-"], "total");
+        }
+
+        const combine = $("#combine");
+        if (r.validTop) {
+          combine.hidden = false;
+          combine.innerHTML = r.over
+            ? `<span class="bad">ウイルス原液の合計 <b>${vol(r.totalTake)} µL</b> が総液量 <b>${vol(r.finalVol)} µL</b> を超えています。PBS(-)では希釈できません。</span>`
+            : `上記のウイルス原液（合計 <b>${vol(r.totalTake)} µL</b>）をすべて混ぜ合わせ、<b>PBS(-) ${vol(r.pbs)} µL</b> を加えると、総液量 <b>${vol(r.finalVol)} µL</b> になります。`;
+        } else {
+          combine.hidden = true;
+          combine.textContent = "";
         }
       }
 
       function renderCalc(r) {
-        const s = state;
-        const ok = r.valid;
-        const t = r.total;
-        $("#target-conc").textContent = ok ? sci(r.targetConc) : "-";
-        $("#m-gc").innerHTML = ok ? `${sci(r.needGc)} <small>gc</small>` : "-";
+        const ok = r.validTop;
         $("#m-final").innerHTML = ok ? `${vol(r.finalVol)} <small>µL</small>` : "-";
-        $("#m-virus").innerHTML = ok ? `${vol(t.take)} <small>µL</small>` : "-";
-        $("#m-pbs").innerHTML = ok ? `${vol(t.pbs)} <small>µL</small>` : "-";
+        $("#m-virus").innerHTML = ok ? `${vol(r.totalTake)} <small>µL</small>` : "-";
+        $("#m-pbs").innerHTML = ok ? `${vol(r.pbs)} <small>µL</small>` : "-";
+        $("#m-mice").innerHTML = ok ? `${num(r.deliverable, 1)} <small>匹</small>` : "-";
 
-        const doseTxt = `${sci(r.dose)} gc`;
         const rows = ok ? [
-          "1匹あたりの投与量から目標titerを求めます",
-          [`${doseTxt} ÷ ${num(r.injVol)} µL`, `<b>${sci(r.targetConc)} gc/µL</b>`],
-          `${num(r.mice, 2)} 匹${r.spare ? ` + 予備 ${num(r.spare, 2)} 匹` : ""}（${num(r.n, 2)} 匹分）に必要な量は`,
-          [`${doseTxt} × ${num(r.n, 2)} 匹`, `<b>${sci(r.needGc)} gc</b>`],
+          `${num(r.mice, 2)} 匹${r.spare ? ` + 予備 ${num(r.spare, 2)} 匹` : ""}（${num(r.n, 2)} 匹分）に、1匹あたり ${num(r.injVol)} µL を投与します`,
           [`${num(r.injVol)} µL × ${num(r.n, 2)} 匹`, `<b>${vol(r.finalVol)} µL</b>（総液量）`],
           { sep: true },
-          ...r.rows.filter(x => x.take > 0).flatMap(x => [
-            `${esc(lotLabel(x))}（${sci(x.titer)} gc/µL）は`,
-            [`${sci(x.gc)} gc ÷ ${sci(x.titer)} gc/µL`, `<b>${vol(x.take)} µL</b>（原液）`],
-            [`${tubeText(x.pick.parts)}`, `<b>${x.pick.cnt} 本を溶かす</b>（計 ${vol(x.thawed)} µL）`],
-            [`${vol(x.final)} µL − ${vol(x.take)} µL`, `<b>${vol(x.pbs)} µL</b>（PBS(-)）`]
-          ]),
-          { last: `${r.short ? "（原液が不足しています）" : `上記を希釈すると、${num(r.n, 2)} 匹分が ${sci(r.targetConc)} gc/µL（${sci(r.dose)} gc/${num(r.injVol)} µL）になります。`}` }
+          ...r.viruses.flatMap((v, vi) => {
+            if (!v.valid) return [];
+            const vName = esc(v.name || `Virus ${vi + 1}`);
+            return [
+              `${vName}: ${sci(v.dose)} gc/mouse × ${num(r.n, 2)} 匹 が必要`,
+              [`${sci(v.dose)} gc × ${num(r.n, 2)} 匹`, `<b>${sci(v.needGc)} gc</b>`],
+              ...v.rows.filter(x => x.take > 0).map(x =>
+                [`${esc(lotLabel(x))}（${sci(x.titer)} gc/µL）`, `<b>${vol(x.take)} µL</b>（${tubeText(x.pick.parts)} を ${x.pick.cnt} 本溶かす）`]
+              ),
+              [`${vName} 合計`, `<b>${vol(v.total.take)} µL</b>${v.short ? ` <span class="bad">（不足: あと ${sci(v.shortGc)} gc、最大 ${v.maxMice} 匹分）</span>` : ""}`]
+            ];
+          }),
+          { sep: true },
+          [`${vol(r.totalTake)} + ${vol(r.pbs)} µL`, `<b>${vol(r.finalVol)} µL</b>（ウイルス合計 + PBS(-)）`],
+          { last: r.over
+            ? "ウイルス原液の合計が総液量を超えています（Injection volumeを増やすか、投与量を減らしてください）。"
+            : `すべてのウイルス原液を混合し、PBS(-) を ${vol(r.pbs)} µL 加えると、総液量 ${vol(r.finalVol)} µL になります。` }
         ] : [];
         $("#steps").innerHTML = rows.map(row => typeof row === "string"
           ? `<span class="caption">${row}</span>`
@@ -866,15 +996,15 @@
           : `<span class="lhs">${row[0]}</span><span class="eq">=</span><span>${row[1]}</span>`).join("");
 
         const warn = [];
-        if (!ok) warn.push("Dose、Injection volume、Mice に正の値を入力してください。");
+        if (!ok) warn.push("Injection volume、Mice に正の値を入力してください。");
         else {
-          if (r.short) warn.push(`ウイルスが不足しています（あと ${sci(r.shortGc)} gc）。この原液量では最大 ${r.maxMice} 匹分です。`);
-          if (r.rows.some(x => x.tooDilute)) warn.push("titerが目標より低いLotがあり、希釈では目標titerに届きません（赤字）。");
-          if (r.rows.some(x => x.eligible && x.volume > 0 && x.titer > 0 && x.take > 0 && x.take < 1)) warn.push("原液の使用量が1 µL未満のLotがあります。ピペットの誤差に注意してください。");
-          if (r.rows.some((x, i) => x.mode !== "skip" && state.lots[i].volume.trim() !== "" && !(x.volume > 0))) warn.push("Volume は 50*8+31*1 のように「1本の量*本数」を + でつないで入力してください。");
+          if (r.over) warn.push(`ウイルス原液の合計（${vol(r.totalTake)} µL）が総液量（${vol(r.finalVol)} µL）を超えています。Injection volumeを増やすか、投与量を減らしてください。`);
+          r.viruses.forEach((v, vi) => {
+            if (v.valid && v.short) warn.push(`${esc(v.name || `Virus ${vi + 1}`)} のウイルスが不足しています（あと ${sci(v.shortGc)} gc、最大 ${v.maxMice} 匹分）。`);
+          });
         }
         $("#input-warn").hidden = warn.length === 0;
-        $("#input-warn").textContent = warn.join(" ");
+        $("#input-warn").innerHTML = warn.join(" ");
       }
 
       function update() {
@@ -882,12 +1012,26 @@
         last = r;
         renderCalc(r);
         renderResults(r);
-        const evals = $("#lots-body").children;
-        r.rows.forEach((row, i) => {
-          if (!evals[i]) return;
-          const raw = String(state.lots[i].volume).trim();
-          evals[i].children[3].textContent = Number.isFinite(row.volume) && raw !== "" ? `= ${num(row.volume, 2)} µL / ${row.tubes.reduce((a, g) => a + g.n, 0)} 本` : "";
-          evals[i].classList.toggle("off", state.lots[i].mode === "skip");
+        const panels = root.querySelectorAll(".virus-panel");
+        r.viruses.forEach((v, vi) => {
+          const panel = panels[vi];
+          if (!panel) return;
+          panel.querySelector(".virus-target").textContent = Number.isFinite(v.targetConc) ? sci(v.targetConc) : "-";
+          const rowsEl = panel.querySelectorAll("tbody tr");
+          v.rows.forEach((row, li) => {
+            const tr = rowsEl[li];
+            if (!tr) return;
+            const raw = String(state.viruses[vi].lots[li].volume).trim();
+            tr.children[2].textContent = Number.isFinite(row.volume) && raw !== "" ? `= ${num(row.volume, 2)} µL / ${row.tubes.reduce((a, g) => a + g.n, 0)} 本` : "";
+            tr.classList.toggle("off", state.viruses[vi].lots[li].mode === "skip");
+          });
+          const warnEl = panel.querySelector(".virus-warn");
+          const vwarn = [];
+          if (v.valid && v.short) vwarn.push(`ウイルスが不足しています（あと ${sci(v.shortGc)} gc）。この原液量では最大 ${v.maxMice} 匹分です。`);
+          if (v.rows.some(x => x.eligible && x.volume > 0 && x.titer > 0 && x.take > 0 && x.take < 1)) vwarn.push("原液の使用量が1 µL未満のLotがあります。ピペットの誤差に注意してください。");
+          if (v.rows.some((x, li) => x.mode !== "skip" && String(state.viruses[vi].lots[li].volume).trim() !== "" && !(x.volume > 0))) vwarn.push("Volume は 50*8+31*1 のように「1本の量*本数」を + でつないで入力してください。");
+          warnEl.hidden = vwarn.length === 0;
+          warnEl.textContent = vwarn.join(" ");
         });
       }
       let last;
@@ -907,15 +1051,15 @@
           update();
         });
       });
-      $("#add-lot").addEventListener("click", () => {
-        state.lots.push({ name: "", lot: "", volume: "", titer: "", mode: "auto" });
-        renderLots();
+      $("#add-virus").addEventListener("click", () => {
+        state.viruses.push(defaultVirus());
+        renderViruses();
         update();
       });
       $("#reset").addEventListener("click", () => {
         state = defaults();
         syncInputs();
-        renderLots();
+        renderViruses();
         update();
       });
       $("#print-page").addEventListener("click", () => window.print());
@@ -924,16 +1068,21 @@
       $("#copy-table").addEventListener("click", async () => {
         const status = $("#copy-status");
         const fallback = $("#copy-fallback");
-        if (!last.valid) { status.textContent = "Nothing to copy"; return; }
-        const header = ["Virus/Lot", "Titer(gc/uL)", "Thaw", "Thawed(uL)", "Virus used(uL)", "PBS(-)(uL)", "Final(uL)", "Dilution", "gc", "Mice"];
-        const used = last.rows.filter(r => r.take > 0);
+        if (!last.validTop) { status.textContent = "Nothing to copy"; return; }
+        const header = ["Virus", "Dose(gc/mouse)", "Lot", "Titer(gc/uL)", "Thaw", "Thawed(uL)", "Virus used(uL)", "gc", "Mice"];
         const f1 = v => Number(v.toFixed(1));
-        const t = last.total;
+        const rows = [];
+        last.viruses.forEach((v, vi) => {
+          const vName = v.name || `Virus ${vi + 1}`;
+          v.rows.filter(r => r.take > 0).forEach(r => {
+            rows.push([vName, sciPlain(v.dose), r.lot || "-", sciPlain(r.titer), tubeText(r.pick.parts).replace(/µ/g, "u"), f1(r.thawed), f1(r.take), sciPlain(r.gc), f1(r.mice)]);
+          });
+        });
         const text = [
-          [`Dose ${sciPlain(last.dose)} gc/mouse`, `Inj ${last.injVol} uL`, `Mice ${last.mice}+${last.spare}`, `Target ${sciPlain(last.targetConc)} gc/uL`],
+          [`Inj ${last.injVol} uL`, `Mice ${last.mice}+${last.spare}`, `Final ${f1(last.finalVol)} uL`, `PBS ${f1(last.pbs)} uL`],
           header,
-          ...used.map(r => [lotLabel(r), sciPlain(r.titer), tubeText(r.pick.parts).replace(/µ/g, "u"), f1(r.thawed), f1(r.take), f1(r.pbs), f1(r.final), Number(r.fold.toFixed(2)), sciPlain(r.gc), f1(r.mice)]),
-          ["Total", "", "", f1(t.thawed), f1(t.take), f1(t.pbs), f1(t.final), "", sciPlain(t.gc), f1(t.mice)]
+          ...rows,
+          ["Total", "", "", "", "", f1(last.totalThawed), f1(last.totalTake), sciPlain(last.totalGc), ""]
         ].map(cols => cols.join("\t")).join("\n");
         try {
           await navigator.clipboard.writeText(text);
@@ -955,10 +1104,14 @@
         window.setTimeout(() => { if (status.textContent === text) status.textContent = ""; }, 4000);
       };
       $("#export-data").addEventListener("click", () => {
-        const data = { format: fileFormat, version: 1, savedAt: new Date().toISOString(), ...state,
+        const data = {
+          format: fileFormat, version: 2, savedAt: new Date().toISOString(),
+          expName: state.expName, date: state.date,
           injVol: Number.isFinite(state.injVol) ? state.injVol : null,
           mice: Number.isFinite(state.mice) ? state.mice : null,
-          spare: Number.isFinite(state.spare) ? state.spare : null };
+          spare: Number.isFinite(state.spare) ? state.spare : null,
+          viruses: state.viruses.map(v => ({ name: v.name, dose: v.dose, lots: v.lots.map(l => ({ lot: l.lot, volume: l.volume, titer: l.titer, mode: l.mode })) }))
+        };
         const d = new Date();
         const safe = String(state.expName || "aav").replace(/[\\/:*?"<>|\s]+/g, "_");
         const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
@@ -979,17 +1132,40 @@
         if (!file) return;
         try {
           const data = JSON.parse(await file.text());
-          if (data?.format !== fileFormat || !Array.isArray(data.lots)) throw new Error("format");
+          if (data?.format !== fileFormat) throw new Error("format");
           const next = defaults();
           next.expName = String(data.expName ?? "");
           next.date = String(data.date ?? "");
-          next.dose = String(data.dose ?? "");
           ["injVol", "mice", "spare"].forEach(k => { next[k] = (data[k] === null || data[k] === undefined || data[k] === "") ? NaN : Number(data[k]); });
-          next.lots = data.lots.map(l => ({ name: String(l.name ?? ""), lot: String(l.lot ?? ""), volume: String(l.volume ?? ""), titer: String(l.titer ?? ""), mode: ["auto", "first", "skip"].includes(l.mode) ? l.mode : (l.use === false ? "skip" : "auto") }));
-          if (next.lots.length === 0) next.lots = defaults().lots;
+          const parseMode = (l) => ["auto", "first", "skip"].includes(l.mode) ? l.mode : (l.use === false ? "skip" : "auto");
+          if (Array.isArray(data.viruses) && data.viruses.length) {
+            next.viruses = data.viruses.map(v => ({
+              name: String(v.name ?? ""),
+              dose: String(v.dose ?? ""),
+              lots: Array.isArray(v.lots) && v.lots.length
+                ? v.lots.map(l => ({ lot: String(l.lot ?? ""), volume: String(l.volume ?? ""), titer: String(l.titer ?? ""), mode: parseMode(l) }))
+                : [defaultLot()]
+            }));
+          } else if (Array.isArray(data.lots)) {
+            // v1形式（ウイルス1種類のみ）からの移行: 全Lotを1つのウイルスにまとめる
+            const firstName = data.lots.find(l => l.name)?.name ?? "";
+            next.viruses = [{
+              name: String(firstName),
+              dose: String(data.dose ?? ""),
+              lots: data.lots.map(l => ({
+                lot: [l.name && l.name !== firstName ? l.name : "", l.lot].filter(Boolean).join(" ").trim() || String(l.lot ?? ""),
+                volume: String(l.volume ?? ""),
+                titer: String(l.titer ?? ""),
+                mode: parseMode(l)
+              }))
+            }];
+          } else {
+            throw new Error("format");
+          }
+          if (next.viruses.length === 0) next.viruses = defaults().viruses;
           state = next;
           syncInputs();
-          renderLots();
+          renderViruses();
           update();
           setFileStatus(`Imported ${file.name}`);
         } catch {
@@ -998,7 +1174,7 @@
       });
 
       syncInputs();
-      renderLots();
+      renderViruses();
       update();
     })();
   </script>
