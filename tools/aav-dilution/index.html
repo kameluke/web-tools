@@ -358,7 +358,7 @@
   }
 
   /* ---------- Print: A4, one page ---------- */
-  @page { size: A4 portrait; margin: 10mm; }
+  @page { size: A4 portrait; margin: 12mm; }
   @media print {
     :root {
       --bg: #fff; --card: #fff; --ink: #1d1d1f; --muted: #6e6e73;
@@ -373,7 +373,8 @@
     .app-title { font-size: 18px; }
     .top { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
     #viruses { gap: 8px; }
-    .panel { padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; break-inside: avoid; }
+    .panel { padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; break-inside: avoid; page-break-inside: avoid; }
+    tr { break-inside: avoid; page-break-inside: avoid; }
     h3 { margin: 0 0 6px; font-size: 13px; }
     .panel-header { margin-bottom: 6px; }
     .form { grid-template-columns: 120px minmax(0, 1fr); gap: 3px 8px; }
@@ -544,7 +545,7 @@
       </table>
     </div>
     <div class="combine-box" id="combine"></div>
-    <p class="note">Thaw は溶かすチューブの本数です（必要量以上で、溶かすウイルス量（gc）が最小になる組合せ）。溶かしたチューブに余りが出た場合は Thawed − Virus used で確認できます。</p>
+    <p class="note">Thaw は溶かすチューブの本数です（必要量以上で、溶かすウイルス量（gc）が最小になる組合せ）。Thawed（溶かした量）と Virus used（使う量）が異なる場合、Virus used を赤字で表示します。余りは Thawed − Virus used で確認できます。</p>
     <div class="status" id="copy-status"></div>
     <textarea id="copy-fallback" class="no-print" readonly hidden aria-label="dilution (manual copy)"></textarea>
   </div>
@@ -907,7 +908,7 @@
       function renderResults(r) {
         const body = $("#result-body");
         body.textContent = "";
-        const addRow = (cells, cls) => {
+        const addRow = (cells, cls, flagIdx) => {
           const tr = document.createElement("tr");
           if (cls) tr.className = cls;
           cells.forEach((c, j) => {
@@ -915,6 +916,7 @@
             td.textContent = c;
             if (j === 2) td.classList.add("thaw");
             if (j === 4) td.classList.add("copies");
+            if (flagIdx && flagIdx.includes(j)) td.classList.add("bad");
             tr.append(td);
           });
           body.append(tr);
@@ -930,6 +932,7 @@
 
           v.rows.forEach((row, li) => {
             const active = row.take > 0;
+            const diff = active && Math.abs(row.thawed - row.take) > 1e-6;
             addRow([
               lotLabel(row, li),
               sci(row.titer),
@@ -938,7 +941,7 @@
               active ? vol(row.take) : "-",
               active ? sci(row.gc) : "-",
               active ? num(row.mice, 1) : "-"
-            ], row.mode === "skip" || !active ? "off" : "");
+            ], row.mode === "skip" || !active ? "off" : "", diff ? [4] : null);
           });
           if (v.valid) {
             addRow(["Subtotal", "", "", vol(v.total.thawed), vol(v.total.take), sci(v.total.gc), num(v.total.mice, 1)], "subtotal");
