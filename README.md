@@ -1,6 +1,7 @@
 # Web Tools
 
 複数の静的Webツールをまとめて公開するためのリポジトリです。
+![](https://komarev.com/ghpvc/?username=kameluke)
 
 ## 構成
 
