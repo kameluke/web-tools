@@ -35,3 +35,7 @@ web-tools/
 1. GitHubに `web-tools` という名前でリポジトリを作成し、このディレクトリの中身をpushする
 2. リポジトリの Settings → Pages で、Source を `Deploy from a branch`、Branch を `main` / `/(root)` に設定する
 3. 数分後に `https://kameluke.github.io/web-tools/` で公開される
+
+## ライセンス
+
+ソースコードのダウンロード・改変・オフラインでの利用は自由に行えますが、改変の有無にかかわらず第三者への再配布・再公開は禁止しています。詳細は [LICENSE](./LICENSE) を参照してください。

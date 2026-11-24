@@ -1,0 +1,40 @@
+Copyright (c) 2026 Takeshi Kameyama
+
+本リポジトリのソースコードは、下記の条件のもとで公開します。
+
+## 許可される利用
+
+- 個人的な利用のためにソースコードをダウンロードすること
+- 必要に応じてソースコードを改変すること
+- オフライン環境で使用すること
+
+## 禁止される利用
+
+- 改変の有無にかかわらず、本ソースコード（またはその一部）を第三者へ再配布・再公開すること
+  （Webサイトへの再掲載、他のリポジトリへのアップロード、パッケージとしての配布などを含む）
+
+上記の禁止事項に該当しない利用（私的な改変・オフライン利用等）は自由に行って構いません。
+ご不明な点があれば、README記載の連絡先までお問い合わせください。
+
+---
+
+Copyright (c) 2026 Takeshi Kameyama
+
+This source code is published under the following terms.
+
+## Permitted
+
+- Downloading the source code for personal use
+- Modifying the source code as needed
+- Using it offline
+
+## Prohibited
+
+- Redistributing or republishing this source code (or any part of it), whether
+  modified or not, to third parties (including, but not limited to, re-hosting
+  it on another website, uploading it to another repository, or distributing
+  it as a package)
+
+Any use not covered by the prohibitions above (private modification, offline
+use, etc.) is freely permitted. If you have any questions, please contact the
+author via the address listed in the README.
