@@ -79,19 +79,20 @@
     font-style: italic;
     letter-spacing: -0.01em;
   }
-  p.lead {
+  p.license-note {
     margin: 10px 0 12px;
     color: var(--muted);
-    font-size: 17px;
-    letter-spacing: -0.01em;
+    font-size: 11px;
+    line-height: 1.5;
   }
+  p.license-note a { color: var(--muted); text-decoration: underline; }
   p.disclaimer {
     margin: 0 0 32px;
     color: var(--muted);
     font-size: 12px;
     line-height: 1.5;
   }
-  ul.tools { display: grid; gap: 16px; margin: 0; padding: 0; list-style: none; }
+  ul.tools { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 0; padding: 0; list-style: none; }
   ul.tools > li {
     padding: 22px 24px;
     border-radius: 20px;
@@ -180,6 +181,7 @@
     h1 .wordmark { height: 32px; }
     h1 .tagline { display: block; width: 100%; margin-top: 2px; font-size: 14px; }
     .brand-icon { width: 64px; height: 64px; border-radius: 16px; }
+    ul.tools { grid-template-columns: 1fr; }
     ul.tools > li { padding: 18px; }
   }
 </style>
@@ -189,7 +191,10 @@
     <img class="brand-icon" src="assets/logo.png" alt="Labrixa">
     <h1><img class="wordmark" src="assets/wordmark.png" alt="Labrixa"><span class="tagline">Scientific Tools &amp; Analysis</span></h1>
   </div>
-  <p class="lead">個人で作った静的Webツール一覧です。 / A collection of static web tools I made.</p>
+  <p class="license-note">
+    ソースコードのダウンロード・改変・オフライン利用は自由ですが、再配布は禁止です。詳細は <a href="https://github.com/kameluke/web-tools/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a> をご覧ください。<br>
+    You may download, modify, and use the source code offline, but redistribution is prohibited. See <a href="https://github.com/kameluke/web-tools/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a> for details.
+  </p>
   <p class="disclaimer">計算結果の正確性は保証しません。ご利用は自己責任でお願いします。 / No guarantee of accuracy is provided. Use at your own risk.</p>
 
   <!--
